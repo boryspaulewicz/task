@@ -204,12 +204,8 @@ download.run.task = function(name = TASK.NAME){
 download.task = function(name = TASK.NAME){
     if(name != ""){
         task.log(paste("Downloading project", name))
-        url = as.character(db.query.csv(sprintf('select url from project where name = "%s";', name))$url)
-        if(length(url) == 0){
-            gui.error.msg(sprintf("Baza zwróciła pusty adres URL dla zadania o nazwie \"%s\"", name))
-        }
-        if(system(sprintf('cd /taskdata && rm -f %s.tar.gz && wget %s -O %s.tar.gz && tar -xzf %s.tar.gz',
-                          name, url, name, name)) != 0){
+        if(system(sprintf('cd /taskdata && rm -fR %s && git clone https://github.com/boryspaulewicz/%s',
+                          name, name)) != 0){
             gui.error.msg("Nie udało się ściągnąć i rozpakować zadania")
         }
     }
