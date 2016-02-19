@@ -269,13 +269,9 @@ gui.run.task = function(){
     hb$packStart((vb = gtkVBox()), T, F, 10)
     for(widget in c(l3, task.name, btn))vb$packStart(widget, F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
-        if(!task.name$text %in% db.query.csv('select name from project')$name){
-            gui.error.msg(sprintf("Nie znaleziono zadania o nazwie \"%s\"", task.name$text), quit.after = F)
-        }else{
-            TASK.NAME <<- task.name$text
-            w$destroy()
-            gtkMainQuit()
-        }
+        TASK.NAME <<- task.name$text
+        w$destroy()
+        gtkMainQuit()
     })
     gSignalConnect(w, 'delete-event', function(w, ...)gtkMainQuit())
     w$show()
