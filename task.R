@@ -204,8 +204,8 @@ download.run.task = function(name = TASK.NAME){
 download.task = function(name = TASK.NAME){
     if(name != ""){
         task.log(paste("Downloading project", name))
-        if(system(sprintf('cd /taskdata && rm -fR %s && git clone https://github.com/boryspaulewicz/%s',
-                          name, name)) != 0){
+        system(sprintf('cd /taskdata && rm -fR %s', name))
+        if(system(sprintf('cd /taskdata && git clone https://github.com/boryspaulewicz/%s', name)) != 0){
             gui.error.msg("Nie udało się ściągnąć i rozpakować zadania")
         }
     }
