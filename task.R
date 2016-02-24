@@ -1,5 +1,8 @@
 #!/usr/local/lib/R/bin/Rscript
 
+## TODO: zapis danych ma ewentualnie poszerzać tabelę, jeżeli zachodzi
+## taka potrzeba
+
 ######################################################################
 ## Struktura bazy danych
 ##
@@ -636,22 +639,22 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
        ## (mp.raw[2] <= sum(rect.bounds[c(2, 4)])))
     pointed = max(min(mp, 1), 0)
     bar$set.position(scale.origin + c(WINDOW$get.size()[1] * width * pointed, 0))
-    ## Ewentualny pasek bez podziału na pudełka
     if(length(labels) == 2){
+        ## Ewentualny pasek bez podziału na pudełka
         rect$set.position(WINDOW$get.size() * c(.5, position))
         WINDOW$draw(rect)
-    }
-    if(length(labels) == 2){
         for(i in 1:2){
             label$set.string(labels[i])
             ## Gdy z lewej, to zaczepienie etykiety z lewej (0, top +
             ## .5 * height), gdy z prawej, to zaczepienie z prawej
             ## (width, ...)
             bounds = label$get.local.bounds()
+            ## Dla pierwszej etykiety origin jest z lewej, dla drugiej z prawej
             label$set.origin(c(c(0, bounds['width'])[i], bounds[c('top', 'height')] %*% c(1, .5)))
             label$set.position(scale.origin + c(c(0, width * WINDOW$get.size()[1])[i],
                                                 bounds['height'] + WINDOW$get.size()[2] * height))
             label$set.color(c(1, 1, 1))
+            WINDOW$draw(label)
         }
     }else{
         ## Rysujemy pudełka niepodświetlone
@@ -706,7 +709,7 @@ source.random.condition = function(){
 ## trial.code jest wykonywana na losowanych warunkach, wartości
 ## czynników definiujących warunki są jej przekazywane jako argumenty
 run.trials = function(trial.code, cnd, b = 1, n = 1,
-                      data.table = "data", max.time = NULL, nof.trials = NULL){
+                      data.table = "data", max.time = NULL, nof.trials = NULL, condition = NULL, record.session = F){
     if('trial' %in% names(cnd))stop('trial is not a valid factor name')
     create.table = !(paste(TASK.NAME, data.table, sep = '_') %in% db.query.csv('show tables')[,1])
     if(is.null(nof.trials)){
@@ -729,19 +732,23 @@ run.trials = function(trial.code, cnd, b = 1, n = 1,
         if(!is.null(data.table)){
             all.data = append(USER.DATA, append(args, data))
             if(trial == 1){
-                if(create.table){
-                    task.log(paste("Creating table for task", TASK.NAME))
-                    db.create.data.table(all.data, table.name = data.table)
+                if(record.session){
+                    if(create.table){
+                        task.log(paste("Creating table for task", TASK.NAME))
+                        db.create.data.table(all.data, table.name = data.table)
+                    }
+                    ## Zapisujemy fakt, że rozpoczęto sesję zadania
+                    db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "started")',
+                                     TASK.NAME, USER.DATA$name, condition))
                 }
-                ## Zapisujemy fakt, że rozpoczęto sesję zadania
-                db.query(sprintf('insert into session (task, id, stage) values ("%s", "%s", "started")', TASK.NAME, USER.DATA$name))
             }
-            db.insert.data(all.data, table.name = data.table)
+            if(record.session)db.insert.data(all.data, table.name = data.table)
         }
         if(!is.null(max.time) && (CLOCK$time - TASK.START) > max.time)break
     }
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
-    db.query(sprintf('insert into session (task, id, stage) values ("%s", "%s", "finished")', TASK.NAME, USER.DATA$name))
+    if(record.session)db.query(sprintf('insert into session (task, id, stage) values ("%s", "%s", "%s", "finished")',
+                                       TASK.NAME, USER.DATA$name, condition))
     WINDOW$set.visible(F)
 }
 
