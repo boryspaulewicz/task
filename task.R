@@ -744,7 +744,7 @@ run.trials = function(trial.code, cnd, b = 1, n = 1,
             }
             if(record.session)db.insert.data(all.data, table.name = data.table)
         }
-        if(!is.null(max.time) && (CLOCK$time - TASK.START) > max.time)break
+        if(is.null(data) || (!is.null(max.time) && (CLOCK$time - TASK.START) > max.time))break
     }
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
     if(record.session)db.query(sprintf('insert into session (task, id, stage) values ("%s", "%s", "%s", "finished")',
