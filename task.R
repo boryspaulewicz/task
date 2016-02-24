@@ -1,7 +1,9 @@
 #!/usr/local/lib/R/bin/Rscript
 
 ## TODO: zapis danych ma ewentualnie poszerzać tabelę, jeżeli zachodzi
-## taka potrzeba
+## taka potrzeba.
+##
+## dostęp do pliku /taskdata/task.log, libssl-dev, pakiet httr
 
 ######################################################################
 ## Struktura bazy danych
@@ -57,8 +59,9 @@ DB.DEBUG = FALSE
 ### Logi
 
 task.log = function(log){
-    cat(paste(date(), '\n', log, '\n', sep = ''), file = '/taskdata/task.log',
-        append = T)
+    print(log)
+    ## cat(paste(date(), '\n', log, '\n', sep = ''), file = '/taskdata/task.log',
+    ##     append = T)
 }
 
 ######################################################################
@@ -708,24 +711,24 @@ source.random.condition = function(){
 
 ## trial.code jest wykonywana na losowanych warunkach, wartości
 ## czynników definiujących warunki są jej przekazywane jako argumenty
-run.trials = function(trial.code, cnd, b = 1, n = 1,
-                      data.table = "data", max.time = NULL, nof.trials = NULL, condition = NULL, record.session = F){
-    if('trial' %in% names(cnd))stop('trial is not a valid factor name')
+run.trials = function(trial.code, cnds, b = 1, n = 1, data.table = "data",
+    max.time = NULL, nof.trials = NULL, condition = NULL, record.session = F){
+    if('trial' %in% names(cnds))stop('trial is not a valid factor name')
     create.table = !(paste(TASK.NAME, data.table, sep = '_') %in% db.query.csv('show tables')[,1])
     if(is.null(nof.trials)){
-        nof.trials = nrow(cnd) * b * n
+        nof.trials = nrow(cnds) * b * n
     }else{
         n = 1
-        b = ceiling(nof.trials / nrow(cnd))
+        b = ceiling(nof.trials / nrow(cnds))
     }
     scenario = NULL
-    for(i in 1:n)scenario = c(scenario, sample(rep(1:nrow(cnd), b)))
+    for(i in 1:n)scenario = c(scenario, sample(rep(1:nrow(cnds), b)))
     WINDOW$set.visible(T)
     TASK.START <<- CLOCK$time
     task.log(sprintf("Starting task %s by user %s", TASK.NAME, USER.DATA$name))
     for(trial in 1:nof.trials){
-        args = as.list(cnd[scenario[trial],])
-        names(args) = names(cnd)
+        args = as.list(cnds[scenario[trial],])
+        names(args) = names(cnds)
         args[['trial']] = trial
         gc()
         data = do.call(trial.code, args)
