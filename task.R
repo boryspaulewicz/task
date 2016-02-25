@@ -45,12 +45,10 @@ enableJIT(3)
 ######################################################################
 ### Zmienne globalne
 
-## TASK.ID = 1
 TASK.NAME = "template"
-## SESSION.ID = NULL
-## ADMIN.ID = 0
 CHOSEN.BUTTON = ""
-USER.DATA = list()
+## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
+USER.DATA = list(name = 'admin', age = 37, gender = 'M')
 TASK.START = NULL
 DB.IP = NULL
 DB.DEBUG = FALSE
@@ -107,63 +105,6 @@ db.ip = function(){
     }
 }
 
-## ######################################################################
-## ### Rejstracja sesji, zapis danych
-
-## db.registered.session = function(task.name = TASK.NAME, condition = 'undefined', allow.new.id = F, allow.new.session = T,
-##                                  oneshot = 1){
-##     if(length(USER.DATA) < 3){
-##         gui.error.msg("Nie podano wymaganych danych osobowych", quit.after = F)
-##         return(0)
-##     }
-##     ## admin to specjalny użytkownik, który bierze udział w sesji testowej (id -1)
-##     if(USER.DATA$name == 'admin')return(-1)
-##     task.id = db.query.csv(sprintf('select id from project where name = \"%s\"', task.name))$id
-##     if(length(task.id) == 0){
-##         gui.error.msg(sprintf("Nie udało się znaleźć w bazie zadania o nazwie %s", task.name), quit.after = T)
-##         return(0)
-##     }
-##     id.query = sprintf('select id from participant where name = \"%s\"', USER.DATA$name)
-##     id = db.query.csv(id.query)$id
-##     if(length(id) == 0){
-##         if(allow.new.id){
-##             db.query(sprintf('insert into participant (name, gender, age) values (\"%s\", \"%s\", %s)',
-##                              USER.DATA$name, USER.DATA$gender, USER.DATA$age))
-##             id = db.query.csv(id.query)$id
-##         }else{
-##             gui.error.msg("Nie znaleziono osoby badanej w bazie danych", quit.after = F)
-##             return(0)
-##         }
-##     }else if(length(id) == 1){
-##         ## Uaktualniamy dane osobowe
-##         db.query(sprintf('update participant set gender = \"%s\", age = %s where id = %s', USER.DATA$gender, USER.DATA$age, id))
-##     }else{
-##         gui.error.msg(sprintf("Ta osoba występuje więcej niż raz w bazie danych: %s", USER.DATA), quit.after = F)
-##         return(0)
-##     }
-##     session = db.query.csv(sprintf("select * from session where participant = %s and project = %s", id, task.id))
-##     if(nrow(session) == 0){
-##         if(allow.new.session){
-##             db.query.csv(db.insert.query(list(participant = id, project = task.id, cnd = condition,
-##                                           admin = ADMIN.ID, oneshot = oneshot, completed = 0), 'session'))
-##             db.query.csv(sprintf("select id from session where participant = %s and project = %s;", id, task.id))$id
-##         }else{
-##             gui.error.msg("Brak upoważnienia do wykonania tego zadania", quit.after = F)
-##             return(0)
-##         }
-##     }else if(nrow(session) == 1){
-##         if((session$oneshot == 1) && (session$completed == 1)){
-##             gui.error.msg("To zadanie można wykonać tylko raz", quit.after = F)
-##             return(0)
-##         }else{
-##             return(session$id)
-##         }
-##     }else{
-##         gui.error.msg("Więcej niż jedna zarejestrowana sesja badania", quit.after = F)
-##         return(0)
-##     }
-## }
-
 ## Zwraca listę warunków wykonanych do tej pory w ramach sesji tego zadania
 db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("select cnd from session where task = %s", task.name))$cnd
 
@@ -177,6 +118,7 @@ db.random.condition = function(conditions, task.name = TASK.NAME){
 
 ## Tworzy standardową tabelę danych zadania, trzeba podać przykładowe dane jako listę
 db.create.data.table = function(data, task.name = TASK.NAME, table.name = 'data'){
+    types = NULL
     q = ''
     for(i in 1:length(data)){
         if(is.character(data[[i]]) | is.factor(data[[i]])){
@@ -185,11 +127,19 @@ db.create.data.table = function(data, task.name = TASK.NAME, table.name = 'data'
             type = 'DOUBLE'
         }else if(is.integer(data[[i]])){
             type = 'INT'
+        }else if(is.logical(data[[i]])){
+            gui.error.msg("Logical data cannot be stored in the database")
         }
-        q = paste(q, names(data)[i], type, ifelse(i == length(data), '', ','))
+        types = c(types, type)
     }
-    q = sprintf('create table if not exists %s_%s (timestamp timestamp, %s);', task.name, table.name, q)
-    db.query(q)
+    table.name = paste(task.name, table.name, sep = '_')
+    db.query(sprintf('create table if not exists %s (timestamp timestamp, %s);', table.name,
+                     paste(paste(names(data), types, sep = ', '), collapse = T)))
+    ## Ewentualne poszerzenie tabeli o dodatkowe kolumny
+    to.add = which(!(names(data) %in% db.query.csv(sprintf('describe %s;', table.name))$Field))
+    for(i in to.add){
+        db.query(sprintf('alter table %s add %s %s;', table.name, names(data)[i], types[i]))
+    }
 }
 
 db.insert.data = function(data, name = TASK.NAME, table.name = "data"){
@@ -229,40 +179,6 @@ gui.error.msg = function(txt, w = NULL, quit.after = T){
     ## stop()
     if(quit.after)quit("no")
 }
-
-## gui.admin.login = function(){
-##     ADMIN.ID <<- 0
-##     w = gtkWindow(show = F)
-##     w$setPosition('center-always')
-##     w$title = "Logowanie"
-##     l1 = gtkLabel("Login")
-##     login = gtkEntry()
-##     l2 = gtkLabel("Hasło")
-##     passwd = gtkEntry()
-##     passwd$visibility = F
-##     btn = gtkButton("Ok")
-##     w$add((hb = gtkHBox()))
-##     hb$packStart((vb = gtkVBox()), T, F, 10)
-##     for(widget in c(l1, login, l2, passwd, btn))vb$packStart(widget, F, F, 10)
-##     gSignalConnect(btn, 'clicked', function(btn){
-##         admin.row = db.query.csv(sprintf('select * from admin where name = "%s";', login$text))
-##         if(login$text %in% admin.row$name){
-##             if(admin.row$passwd == db.query.csv(sprintf('select password("%s");', passwd$text))[,1]){
-##                 ADMIN.ID <<- admin.row$id
-##                 task.log(paste("Succesful admin login for", login$text))
-##                 w$destroy()
-##                 gtkMainQuit()
-##             }else{
-##                 gui.error.msg("Błędne hasło", quit.after = F)
-##             }
-##         }else{
-##             gui.error.msg('Nie ma takiego loginu', quit.after = F)
-##         }
-##     })
-##     gSignalConnect(w, 'delete-event', function(w, ...)gtkMainQuit())
-##     w$show()
-##     gtkMain()
-## }
 
 gui.run.task = function(){
     w = gtkWindow(show = F)
@@ -759,12 +675,6 @@ run.trials = function(trial.code, cnds, b = 1, n = 1, data.table = "data",
 ### Inicjalizacja
 
 DB.IP <<- db.ip()
-if(!interactive()){
-    ## gui.admin.login()
-    ## if(ADMIN.ID > 0){
-    ## ADMIN.ID <<- 1
-    gui.run.task()
-    ## }else{ quit("no") }
-}
+if(!interactive())gui.run.task()
 
 ## res = gui.quest(paste('Pytanie', 1:20), 1:4)
