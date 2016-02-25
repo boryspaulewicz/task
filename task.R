@@ -117,7 +117,7 @@ db.random.condition = function(conditions, task.name = TASK.NAME){
 }
 
 ## Tworzy standardową tabelę danych zadania, trzeba podać przykładowe dane jako listę
-db.create.data.table = function(data, task.name = TASK.NAME, table.name = 'data'){
+db.create.data.table = function(data, task.name = TASK.NAME){
     types = NULL
     q = ''
     for(i in 1:length(data)){
@@ -132,9 +132,9 @@ db.create.data.table = function(data, task.name = TASK.NAME, table.name = 'data'
         }
         types = c(types, type)
     }
-    table.name = paste(task.name, table.name, sep = '_')
+    table.name = paste(task.name, 'data', sep = '_')
     db.query(sprintf('create table if not exists %s (timestamp timestamp, %s);', table.name,
-                     paste(paste(names(data), types, sep = ', '), collapse = T)))
+                     paste(paste(names(data), types), collapse = ', ')))
     ## Ewentualne poszerzenie tabeli o dodatkowe kolumny
     to.add = which(!(names(data) %in% db.query.csv(sprintf('describe %s;', table.name))$Field))
     for(i in to.add){
@@ -142,9 +142,8 @@ db.create.data.table = function(data, task.name = TASK.NAME, table.name = 'data'
     }
 }
 
-db.insert.data = function(data, name = TASK.NAME, table.name = "data"){
-    ## data$session = session.id
-    db.query(db.insert.query(data, sprintf("%s_%s", name, table.name)), quit.after = F)
+db.insert.data = function(data, name = TASK.NAME){
+    db.query(db.insert.query(data, sprintf("%s_%s", name, 'data')), quit.after = F)
 }
 
 ######################################################################
@@ -627,10 +626,11 @@ source.random.condition = function(){
 
 ## trial.code jest wykonywana na losowanych warunkach, wartości
 ## czynników definiujących warunki są jej przekazywane jako argumenty
-run.trials = function(trial.code, cnds, b = 1, n = 1, data.table = "data",
+run.trials = function(trial.code, cnds, b = 1, n = 1,
     max.time = NULL, nof.trials = NULL, condition = NULL, record.session = F){
     if('trial' %in% names(cnds))stop('trial is not a valid factor name')
-    create.table = !(paste(TASK.NAME, data.table, sep = '_') %in% db.query.csv('show tables')[,1])
+    ## Zawsze sprawdzamy, czy nie trzeba dodać kolumn danych
+    create.table = T ## !(paste(TASK.NAME, 'data', sep = '_') %in% db.query.csv('show tables')[,1])
     if(is.null(nof.trials)){
         nof.trials = nrow(cnds) * b * n
     }else{
@@ -648,25 +648,25 @@ run.trials = function(trial.code, cnds, b = 1, n = 1, data.table = "data",
         args[['trial']] = trial
         gc()
         data = do.call(trial.code, args)
-        if(!is.null(data.table)){
+        if(record.session){
             all.data = append(USER.DATA, append(args, data))
+            ## Jeżeli to pierwsza próba, to upewnij się, że tabela
+            ## istnieje i ma wszystkie potrzebne kolumny i zapisz fakt
+            ## rozpoczęcia sesji
             if(trial == 1){
-                if(record.session){
-                    if(create.table){
-                        task.log(paste("Creating table for task", TASK.NAME))
-                        db.create.data.table(all.data, table.name = data.table)
-                    }
-                    ## Zapisujemy fakt, że rozpoczęto sesję zadania
-                    db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "started")',
-                                     TASK.NAME, USER.DATA$name, condition))
+                if(create.table){
+                    task.log(paste("Creating table for task", TASK.NAME))
+                    db.create.data.table(all.data)
                 }
+                db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "started")',
+                                 TASK.NAME, USER.DATA$name, condition))
             }
-            if(record.session)db.insert.data(all.data, table.name = data.table)
+            if(record.session)db.insert.data(all.data)
         }
         if(is.null(data) || (!is.null(max.time) && (CLOCK$time - TASK.START) > max.time))break
     }
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
-    if(record.session)db.query(sprintf('insert into session (task, id, stage) values ("%s", "%s", "%s", "finished")',
+    if(record.session)db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "finished")',
                                        TASK.NAME, USER.DATA$name, condition))
     WINDOW$set.visible(F)
 }
