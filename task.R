@@ -326,6 +326,31 @@ gui.show.instruction = function(txt, buttons = 'Dalej'){
     CHOSEN.BUTTON
 }
 
+CHOSEN.ITEM <<- -1
+gui.choose.item = function(items){
+    w = gtkWindow(show = F)
+    w$setPosition('center-always')
+    w$title = "Wybierz element"
+    w$add((hb = gtkHBox()))
+    hb$packStart((vb = gtkVBox()), F, F, 20)
+    vb$packStart(gtkLabel("Element"), F, F, 10)
+    vb$packStart((choice = gtkComboBoxNewText()))
+    vb$packStart((btn = gtkButton("Ok")), F, F, 10)
+    for(i in items)choice$appendText(i)
+    gSignalConnect(btn, 'clicked', function(btn){
+        if(choice$active != -1){
+            CHOSEN.ITEM <<- items[choice$active + 1]
+            w$destroy()
+            return(T)
+        }
+    })
+    w$show()
+    while(class(w)[1] != '<invalid>'){
+        gtkMainIteration()
+    }
+    CHOSEN.ITEM
+}
+
 gui.user.data = function(){
     USER.DATA <<- list()
     w = gtkWindow(show = F)
