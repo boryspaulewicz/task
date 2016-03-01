@@ -1,7 +1,6 @@
 #!/usr/local/lib/R/bin/Rscript
 
-## TODO: zapis danych ma ewentualnie poszerzać tabelę, jeżeli zachodzi
-## taka potrzeba.
+## TODO: instrukcja z większą czcionką, padding naokoło
 ##
 ## dostęp do pliku /taskdata/task.log, libssl-dev, pakiet httr
 
