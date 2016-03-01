@@ -218,7 +218,7 @@ gui.run.task = function(){
     hb$packStart((vb = gtkVBox()), T, F, 10)
     for(widget in c(l3, task.name, l4, passwd, btn))vb$packStart(widget, F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
-        db.connect()
+        db.connect(passwd$text)
         if(dbIsValid(MYSQL.CON)){
             TASK.NAME <<- task.name$text
             w$destroy()
