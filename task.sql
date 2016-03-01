@@ -1,7 +1,8 @@
 -- -*- coding: utf-8 -*-
 
 -- Kod tworzący podstawowe tabele bazy danych procedur komputerowych i
--- systemu debian live. Domyślnie hasło root-a m...b...<n>
+-- systemu debian live. Domyślnie hasło root-a m...b...<n>. Pamiętać o
+-- ustawieniu bind-address na 0.0.0.0 w /etc/mysql/my.cnf
 
 -- Użycie po zalogowaniu do bazy jako root: source task.sql
 

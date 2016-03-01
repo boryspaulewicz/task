@@ -36,8 +36,9 @@
 
 library(sfml)
 library(RGtk2)
-library(httr)
-library(XML) ## content tego potrzebuje
+library(RMySQL)
+## library(httr)
+## library(XML) ## content tego potrzebuje
 library(stringr)
 library(compiler)
 enableJIT(3)
@@ -50,7 +51,8 @@ CHOSEN.BUTTON = ""
 ## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
 USER.DATA = list(name = 'admin', age = 37, gender = 'M')
 TASK.START = NULL
-DB.IP = NULL
+## DB.IP = NULL
+MYSQL.CON = NULL
 DB.DEBUG = FALSE
 
 ######################################################################
@@ -65,22 +67,45 @@ task.log = function(log){
 ######################################################################
 ### Baza danych
 
-## jako ... można quit.after = F
-db.query = function(q, ip = DB.IP, ...){
-    if(DB.DEBUG)print(q)
-    res = GET(paste("http://", ip, "/task/query.php", sep = ''),
-              query = list(do = q))
-    if(status_code(res) != 200)gui.error.msg(paste("Nieudana próba połączenia z bazą danych.\nTreść zapytania:", q), ...)
-    res
+db.connect = function(passwd){
+    MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
+                            password = passwd, port = 80, host = '176.111.127.178')
 }
 
-db.query.csv = function(q, ...){
-    res = db.query(q, ...)
-    text = content(res, "text")
-    if(str_trim(text) != ""){
-        read.csv(textConnection(text), stringsAsFactors = F)
-    }else{ NULL }
+## jako ... można quit.after = F
+db.query = function(q, fetch = F, ...){ ## , ip = DB.IP, ...){
+    ## if(DB.DEBUG)print(q)
+    ## res = GET(paste("http://", ip, "/task/query.php", sep = ''),
+    ##           query = list(do = q))
+    ## if(status_code(res) != 200)gui.error.msg(paste("Nieudana próba połączenia z bazą danych.\nTreść zapytania:", q), ...)
+    ## res
+    if(DB.DEBUG)print(q)
+    val = NULL
+    if(!is.null(MYSQL.CON)){
+        if(dbIsValid(MYSQL.CON)){
+            res = dbSendQuery(MYSQL.CON, q)
+            if(fetch){
+                val = dbFetch(res)
+            }
+            dbClearResult(res)
+        }else{
+            gui.error.msg("Połączenie z bazą danych straciło ważność", ...)
+        }
+    }else{
+        gui.error.msg("Brak połączenia z bazą danych", ...)
+    }
+    val
 }
+
+db.query.csv = function(q, ...)db.query(q, fetch = T, ...)
+
+## db.query.csv = function(q, ...){
+##     res = db.query(q, ...)
+##     text = content(res, "text")
+##     if(str_trim(text) != ""){
+##         read.csv(textConnection(text), stringsAsFactors = F)
+##     }else{ NULL }
+## }
 
 ## data to lista nazwanych wartości, table to nazwa tabeli
 db.insert.query = function(data, table){
@@ -95,23 +120,23 @@ db.insert.query = function(data, table){
     sprintf("insert into %s %s values %s;", table, nms, vls)
 }
 
-## IP bazy danych
-db.ip = function(){
-    l = try(readLines('/taskdata/ip'), T)
-    if(class(l) == 'try-error'){
-        gui.error.msg("Nie udało się ustalić adresu IP bazy danych")
-    }else{
-        str_trim(l[1])
-    }
-}
+## ## IP bazy danych
+## db.ip = function(){
+##     l = try(readLines('/taskdata/ip'), T)
+##     if(class(l) == 'try-error'){
+##         gui.error.msg("Nie udało się ustalić adresu IP bazy danych")
+##     }else{
+##         str_trim(l[1])
+##     }
+## }
 
 ## Zwraca listę warunków wykonanych do tej pory w ramach sesji tego zadania
-db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("select cnd from session where task = %s", task.name))$cnd
+db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("select cnd from session where task = \"%s\";", task.name))$cnd
 
 ## Wybiera losową wersję spośród tych faktycznie ukończonych, których
 ## do tej pory było najmniej
 db.random.condition = function(conditions, task.name = TASK.NAME){
-    ct = table(c(db.query.csv(sprintf('select cnd from session where task = %s and stage = "finished"', task.name))$cnd, conditions))
+    ct = table(c(db.query.csv(sprintf('select cnd from session where task = \"%s\" and stage = "finished";', task.name))$cnd, conditions))
     ct = ct[names(ct) != 'undefined']
     sample(names(ct[ct == min(ct)]), 1)
 }
@@ -143,7 +168,7 @@ db.create.data.table = function(data, task.name = TASK.NAME){
 }
 
 db.insert.data = function(data, name = TASK.NAME){
-    db.query(db.insert.query(data, sprintf("%s_%s", name, 'data')), quit.after = F)
+    db.query(db.insert.query(data, sprintf("%s_data", name)), quit.after = T)
 }
 
 ######################################################################
@@ -185,14 +210,20 @@ gui.run.task = function(){
     w$title = "Uruchomienie zadania"
     l3 = gtkLabel("Zadanie")
     task.name = gtkEntry()
+    l4 = gtkLabel("Hasło")
+    passwd = gtkEntry()
+    passwd$visibility = F
     btn = gtkButton("Ok")
     w$add((hb = gtkHBox()))
     hb$packStart((vb = gtkVBox()), T, F, 10)
-    for(widget in c(l3, task.name, btn))vb$packStart(widget, F, F, 10)
+    for(widget in c(l3, task.name, l4, passwd, btn))vb$packStart(widget, F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
-        TASK.NAME <<- task.name$text
-        w$destroy()
-        gtkMainQuit()
+        db.connect()
+        if(dbIsValid(MYSQL.CON)){
+            TASK.NAME <<- task.name$text
+            w$destroy()
+            gtkMainQuit()
+        }else{ gui.error.msg("Nie udało się połączyć z bazą danych. Spróbuj poprawić hasło.", quit.after = F) }
     })
     gSignalConnect(w, 'delete-event', function(w, ...)gtkMainQuit())
     w$show()
@@ -214,7 +245,7 @@ gui.select.task = function(){
     w$add((hb = gtkHBox()))
     ## Lewa kolumna okna
     hb$packStart((vb = gtkVBox()))
-    projects = db.query.csv('select * from project')
+    projects = db.query.csv('select * from project;')
     vb$packStart(gtkLabel("Nazwa zadania"), F, F)
     vb$packStart((cb = gtkComboBoxNewText()), F, F, 10)
     for(n in projects$name){
@@ -630,7 +661,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
     max.time = NULL, nof.trials = NULL, condition = NULL, record.session = F){
     if('trial' %in% names(cnds))stop('trial is not a valid factor name')
     ## Zawsze sprawdzamy, czy nie trzeba dodać kolumn danych
-    create.table = T ## !(paste(TASK.NAME, 'data', sep = '_') %in% db.query.csv('show tables')[,1])
+    create.table = T ## !(paste(TASK.NAME, 'data', sep = '_') %in% db.query.csv('show tables;')[,1])
     if(is.null(nof.trials)){
         nof.trials = nrow(cnds) * b * n
     }else{
@@ -658,7 +689,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "started")',
+                db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "started");',
                                  TASK.NAME, USER.DATA$name, condition))
             }
             if(record.session)db.insert.data(all.data)
@@ -666,7 +697,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
         if(is.null(data) || (!is.null(max.time) && (CLOCK$time - TASK.START) > max.time))break
     }
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
-    if(record.session)db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "finished")',
+    if(record.session)db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "finished");',
                                        TASK.NAME, USER.DATA$name, condition))
     WINDOW$set.visible(F)
 }
@@ -674,7 +705,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 ######################################################################
 ### Inicjalizacja
 
-DB.IP <<- db.ip()
+## DB.IP <<- db.ip()
 if(!interactive())gui.run.task()
 
 ## res = gui.quest(paste('Pytanie', 1:20), 1:4)
