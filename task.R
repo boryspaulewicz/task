@@ -327,6 +327,7 @@ gui.show.instruction = function(txt, buttons = 'Dalej'){
 
 CHOSEN.ITEM <<- -1
 gui.choose.item = function(items){
+    CHOSEN.ITEM <<- -1
     w = gtkWindow(show = F)
     w$setPosition('center-always')
     w$title = "Wybierz element"
@@ -348,6 +349,32 @@ gui.choose.item = function(items){
         gtkMainIteration()
     }
     CHOSEN.ITEM
+}
+
+ENTRY.VALUE <<- ""
+gui.get.value = function(title = 'Podaj wartość', label = 'Wartość', visibility = T){
+    ENTRY.VALUE <<- ""
+    w = gtkWindow(show = F)
+    w$setPosition('center-always')
+    w$title = title
+    w$add((hb = gtkHBox()))
+    hb$packStart((vb = gtkVBox()), F, F, 20)
+    vb$packStart(gtkLabel(label), F, F, 10)
+    vb$packStart((entry = gtkEntry()))
+    entry$visibility = visibility
+    vb$packStart((btn = gtkButton("Ok")), F, F, 10)
+    gSignalConnect(btn, 'clicked', function(btn){
+        if(entry$text != ""){
+            ENTRY.VALUE <<- entry$text
+            w$destroy()
+            return(T)
+        }
+    })
+    w$show()
+    while(class(w)[1] != '<invalid>'){
+        gtkMainIteration()
+    }
+    ENTRY.VALUE
 }
 
 gui.user.data = function(){
