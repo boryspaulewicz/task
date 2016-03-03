@@ -40,3 +40,10 @@ CREATE TABLE IF NOT EXISTS session (
   time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   stage enum('started','finished') COLLATE utf8_polish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_polish_ci;
+
+-- Tabela na logi
+
+create table if not exists logs(
+ log varchar(300);
+ time timestamp not null default current_timestamp on update current_timestamp);
+ 
