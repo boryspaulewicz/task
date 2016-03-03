@@ -36,8 +36,8 @@
 library(sfml)
 library(RGtk2)
 library(RMySQL)
-## library(httr)
-## library(XML) ## content tego potrzebuje
+library(httr)
+library(XML) ## content tego potrzebuje
 library(stringr)
 library(compiler)
 enableJIT(3)
@@ -67,44 +67,44 @@ task.log = function(log){
 ### Baza danych
 
 db.connect = function(passwd){
-    MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
-                            password = passwd, port = 80, host = '176.111.127.178')
+##    MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
+##                            password = passwd, port = 80, host = '176.111.127.178')
 }
 
 ## jako ... można quit.after = F
 db.query = function(q, fetch = F, ...){ ## , ip = DB.IP, ...){
-    ## if(DB.DEBUG)print(q)
-    ## res = GET(paste("http://", ip, "/task/query.php", sep = ''),
-    ##           query = list(do = q))
-    ## if(status_code(res) != 200)gui.error.msg(paste("Nieudana próba połączenia z bazą danych.\nTreść zapytania:", q), ...)
-    ## res
     if(DB.DEBUG)print(q)
-    val = NULL
-    if(!is.null(MYSQL.CON)){
-        if(dbIsValid(MYSQL.CON)){
-            res = dbSendQuery(MYSQL.CON, q)
-            if(fetch){
-                val = dbFetch(res)
-            }
-            dbClearResult(res)
-        }else{
-            gui.error.msg("Połączenie z bazą danych straciło ważność", ...)
-        }
-    }else{
-        gui.error.msg("Brak połączenia z bazą danych", ...)
-    }
-    val
+    res = GET(paste("http://", ip, "/task/query.php", sep = ''),
+           query = list(do = q))
+    if(status_code(res) != 200)gui.error.msg(paste("Nieudana próba połączenia z bazą danych.\nTreść zapytania:", q), ...)
+    res
+##    if(DB.DEBUG)print(q)
+##    val = NULL
+##    if(!is.null(MYSQL.CON)){
+##        if(dbIsValid(MYSQL.CON)){
+##            res = dbSendQuery(MYSQL.CON, q)
+##            if(fetch){
+##                val = dbFetch(res)
+##            }
+##            dbClearResult(res)
+##        }else{
+##            gui.error.msg("Połączenie z bazą danych straciło ważność", ...)
+##        }
+##    }else{
+##        gui.error.msg("Brak połączenia z bazą danych", ...)
+##    }
+##    val
 }
 
-db.query.csv = function(q, ...)db.query(q, fetch = T, ...)
+## db.query.csv = function(q, ...)db.query(q, fetch = T, ...)
 
-## db.query.csv = function(q, ...){
-##     res = db.query(q, ...)
-##     text = content(res, "text")
-##     if(str_trim(text) != ""){
-##         read.csv(textConnection(text), stringsAsFactors = F)
-##     }else{ NULL }
-## }
+db.query.csv = function(q, ...){
+    res = db.query(q, ...)
+    text = content(res, "text")
+    if(str_trim(text) != ""){
+        read.csv(textConnection(text), stringsAsFactors = F)
+    }else{ NULL }
+}
 
 ## data to lista nazwanych wartości, table to nazwa tabeli
 db.insert.query = function(data, table){
@@ -119,15 +119,15 @@ db.insert.query = function(data, table){
     sprintf("insert into %s %s values %s;", table, nms, vls)
 }
 
-## ## IP bazy danych
-## db.ip = function(){
-##     l = try(readLines('/taskdata/ip'), T)
-##     if(class(l) == 'try-error'){
-##         gui.error.msg("Nie udało się ustalić adresu IP bazy danych")
-##     }else{
-##         str_trim(l[1])
-##     }
-## }
+## IP bazy danych
+db.ip = function(){
+    l = try(readLines('/taskdata/ip'), T)
+    if(class(l) == 'try-error'){
+        gui.error.msg("Nie udało się ustalić adresu IP bazy danych")
+    }else{
+        str_trim(l[1])
+    }
+}
 
 ## Zwraca listę warunków wykonanych do tej pory w ramach sesji tego zadania
 db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("select cnd from session where task = \"%s\";", task.name))$cnd
@@ -756,7 +756,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 ######################################################################
 ### Inicjalizacja
 
-## DB.IP <<- db.ip()
+DB.IP <<- db.ip()
 if(!interactive())gui.run.task()
 
 ## res = gui.quest(paste('Pytanie', 1:20), 1:4)
