@@ -72,7 +72,7 @@ db.connect = function(passwd){
 }
 
 ## jako ... można quit.after = F
-db.query = function(q, fetch = F, ...){ ## , ip = DB.IP, ...){
+db.query = function(q, fetch = F, ip = DB.IP, ...){
     if(DB.DEBUG)print(q)
     res = GET(paste("http://", ip, "/task/query.php", sep = ''),
            query = list(do = q))
