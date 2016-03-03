@@ -217,12 +217,12 @@ gui.run.task = function(){
     hb$packStart((vb = gtkVBox()), T, F, 10)
     for(widget in c(l3, task.name, l4, passwd, btn))vb$packStart(widget, F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
-        db.connect(passwd$text)
-        if(dbIsValid(MYSQL.CON)){
+        ## db.connect(passwd$text)
+        ## if(dbIsValid(MYSQL.CON)){
             TASK.NAME <<- task.name$text
             w$destroy()
             gtkMainQuit()
-        }else{ gui.error.msg("Nie udało się połączyć z bazą danych. Spróbuj poprawić hasło.", quit.after = F) }
+        ## }else{ gui.error.msg("Nie udało się połączyć z bazą danych. Spróbuj poprawić hasło.", quit.after = F) }
     })
     gSignalConnect(w, 'delete-event', function(w, ...)gtkMainQuit())
     w$show()
