@@ -296,13 +296,16 @@ gui.select.task = function(){
     }
 }
 
-gui.show.instruction = function(txt, buttons = 'Dalej'){
+gui.show.instruction = function(txt, buttons = 'Dalej', scale = 15){
     CHOSEN.BUTTON <<- ''
     w = gtkWindow(show = F)
     w$setTitle("Instrukcja")
     w$setPosition('center-always')
     w$add((vb = gtkVBox()))
+    font.desc = pangoFontDescriptionNew()
+    font.desc$setSize(scale * PANGO_SCALE)
     vb$packStart((tv = gtkTextView()), T, T, 10)
+    tv$modifyFont(font.desc)
     tv$setWrapMode('word')
     tv$setEditable(F)
     tv$setSizeRequest(600, 400)
