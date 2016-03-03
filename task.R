@@ -58,7 +58,8 @@ DB.DEBUG = FALSE
 ### Logi
 
 task.log = function(log){
-    print(log)
+    db.query(sprintf('insert into logs (log) values ("%s");', log))
+    ## print(log)
     ## cat(paste(date(), '\n', log, '\n', sep = ''), file = '/taskdata/task.log',
     ##     append = T)
 }
