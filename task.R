@@ -136,8 +136,11 @@ db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("sele
 ## Wybiera losową wersję spośród tych faktycznie ukończonych, których
 ## do tej pory było najmniej
 db.random.condition = function(conditions, task.name = TASK.NAME){
-    ct = table(c(db.query.csv(sprintf('select cnd from session where task = \"%s\" and stage = "finished";', task.name))$cnd, conditions))
+    ct = table(c(db.query.csv(sprintf('select cnd from session where task = \"%s\" and stage = "finished";',
+                                        task.name))$cnd, conditions))
     ct = ct[names(ct) != 'undefined']
+    ## Chcemy losować tylko spośrod tych, które są obecnie reprezentowane w folderze condition
+    ct = ct[names(ct) %in% conditions]
     sample(names(ct[ct == min(ct)]), 1)
 }
 
