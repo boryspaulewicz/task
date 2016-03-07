@@ -1,6 +1,11 @@
+Aktualna wersja obrazu systemu operacyjnego jest tutaj: http://149.156.92.47/image-R
+
+Aby skopiować obraz systemu na pendrive'a pod Windowsem można użyć programu Win32DiskImager, dostępnego tutaj:
+https://sourceforge.net/projects/win32diskimager/
+
 TODO: 
 
-mysql-client w systemie, IP bazy danych w zmiennej środowiskowej
+mysql-client w systemie
 
 session id jako obcy klucz w tabelach danych z procedur, pozwalajacy usuwac od razu cale sesje.
 
