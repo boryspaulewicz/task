@@ -46,6 +46,7 @@ enableJIT(3)
 ### Zmienne globalne
 
 TASK.NAME = "template"
+SESSION.ID = -1
 CHOSEN.BUTTON = ""
 ## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
 USER.DATA = list(name = 'admin', age = 37, gender = 'M')
@@ -161,7 +162,9 @@ db.create.data.table = function(data, task.name = TASK.NAME){
         types = c(types, type)
     }
     table.name = paste(task.name, 'data', sep = '_')
-    db.query(sprintf('create table if not exists %s (timestamp timestamp, %s);', table.name,
+    db.query(sprintf('CREATE TABLE IF NOT EXISTS %s (timestamp TIMESTAMP, session_id INT(11) NOT NULL, %s, \
+KEY session_id (session_id), \
+FOREIGN KEY (session_id) REFERENCES session (session_id) ON DELETE CASCADE ON UPDATE CASCADE);', table.name,
                      paste(paste(names(data), types), collapse = ', ')))
     ## Ewentualne poszerzenie tabeli o dodatkowe kolumny
     to.add = which(!(names(data) %in% db.query.csv(sprintf('describe %s;', table.name))$Field))
@@ -716,9 +719,9 @@ source.random.condition = function(){
 ## trial.code jest wykonywana na losowanych warunkach, wartości
 ## czynników definiujących warunki są jej przekazywane jako argumenty
 run.trials = function(trial.code, cnds, b = 1, n = 1,
-    max.time = NULL, nof.trials = NULL, condition = NULL, record.session = F){
+    max.time = NULL, nof.trials = NULL, condition = 'default', record.session = F){
     if('trial' %in% names(cnds))stop('trial is not a valid factor name')
-    ## Zawsze sprawdzamy, czy nie trzeba dodać kolumn danych
+    ## Zawsze sprawdzamy, czy nie trzeba dodać kolumn danych, a więc zawsze robimy db.create.data.table
     create.table = T ## !(paste(TASK.NAME, 'data', sep = '_') %in% db.query.csv('show tables;')[,1])
     if(is.null(nof.trials)){
         nof.trials = nrow(cnds) * b * n
@@ -747,16 +750,22 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "started");',
-                                 TASK.NAME, USER.DATA$name, condition))
+                db.query.csv(sprintf('INSERT INTO session (task, name, cnd, stage) VALUES ("%s", "%s", "%s", "started");',
+                                     TASK.NAME, USER.DATA$name, condition))
+                ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
+                SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
+                                                    TASK.NAME, USER.DATA$name, condition))[[1]]
+                SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
             }
-            if(record.session)db.insert.data(all.data)
+            all.data[['session_id']] = SESSION.ID
+            db.insert.data(all.data)
         }
         if(is.null(data) || (!is.null(max.time) && (CLOCK$time - TASK.START) > max.time))break
     }
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
-    if(record.session)db.query(sprintf('insert into session (task, id, cnd, stage) values ("%s", "%s", "%s", "finished");',
-                                       TASK.NAME, USER.DATA$name, condition))
+    if(record.session)db.query(sprintf('UPDATE session SET stage = "finished" WHERE session_id = %d;', SESSION.ID))
+    ##    db.query(sprintf('insert into session (task, name, cnd, stage) values ("%s", "%s", "%s", "finished");',
+    ##                     TASK.NAME, USER.DATA$name, condition))
     WINDOW$set.visible(F)
 }
 
