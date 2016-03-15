@@ -741,7 +741,8 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
         gc()
         data = do.call(trial.code, args)
         if(record.session){
-            all.data = append(USER.DATA, append(args, data))
+            ## Już nie zapisujemy danych osobowych w tabelach danych, tylko w tabeli sesji.
+            all.data = append(args, data)
             ## Jeżeli to pierwsza próba, to upewnij się, że tabela
             ## istnieje i ma wszystkie potrzebne kolumny i zapisz fakt
             ## rozpoczęcia sesji
@@ -750,11 +751,11 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.query.csv(sprintf('INSERT INTO session (task, name, cnd, stage) VALUES ("%s", "%s", "%s", "started");',
-                                     TASK.NAME, USER.DATA$name, condition))
-                ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
-                SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
-                                                    TASK.NAME, USER.DATA$name, condition))[[1]]
+                db.query.csv(sprintf('INSERT INTO session (task, name, age, gender, cnd, stage) VALUES ("%s", "%s", %d, "%s", "%s", "started");',
+                                     TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition))
+                ## Musimy tak sprawdzać, ponieważ nie korzystamy z trwałego połączenia z bazą
+                SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND age = %d AND gender = "%s" AND cnd = "%s" AND stage = "started";',
+                                                    TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition))[[1]]
                 SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
             }
             all.data[['session_id']] = SESSION.ID
