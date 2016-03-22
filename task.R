@@ -49,7 +49,7 @@ TASK.NAME = "template"
 SESSION.ID = -1
 CHOSEN.BUTTON = ""
 ## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
-USER.DATA = list(name = 'admin', age = 37, gender = 'M')
+USER.DATA = list(name = NULL, age = NULL, gender = NULL)
 TASK.START = NULL
 ## DB.IP = NULL
 MYSQL.CON = NULL
@@ -311,13 +311,14 @@ gui.show.instruction = function(txt, buttons = 'Dalej', scale = 15){
     w$add((vb = gtkVBox()))
     font.desc = pangoFontDescriptionNew()
     font.desc$setSize(scale * PANGO_SCALE)
-    vb$packStart((tv = gtkTextView()), T, T, 10)
+    tv = gtkTextView()
     tv$modifyFont(font.desc)
     tv$setWrapMode('word')
     tv$setEditable(F)
     tv$setSizeRequest(800, 600)
     tv$setBuffer((tb = gtkTextBuffer()))
     tb$setText(txt)
+    vb$packStart(tv, T, T, 10)
     vb$packStart((hb = gtkHBox()), F, F, 10)
     for(b in buttons){
         hb$packStart((btn = gtkButton(b)), F, F, 10)
