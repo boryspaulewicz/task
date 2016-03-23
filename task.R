@@ -363,20 +363,26 @@ gui.choose.item = function(items){
 }
 
 ENTRY.VALUE <<- ""
-gui.get.value = function(title = 'Podaj wartość', label = 'Wartość', visibility = T, allow.empty = T){
+gui.get.value = function(title = 'Podaj wartość', labels = 'Wartość', visibility = T,
+                         allow.empty = T){
     ENTRY.VALUE <<- ""
     w = gtkWindow(show = F)
     w$setPosition('center-always')
     w$title = title
     w$add((hb = gtkHBox()))
     hb$packStart((vb = gtkVBox()), F, F, 20)
-    vb$packStart(gtkLabel(label), F, F, 10)
-    vb$packStart((entry = gtkEntry()))
-    entry$visibility = visibility
+    nof = length(labels)
+    entries = list()
+    for(i in 1:nof){
+        vb$packStart(gtkLabel(labels[i]), F, F, 10)
+        vb$packStart((entry = gtkEntry()))
+        entry$visibility = visibility
+        entries[[i]] = entry
+    }
     vb$packStart((btn = gtkButton("Ok")), F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
-        if(allow.empty | (entry$text != "")){
-            ENTRY.VALUE <<- entry$text
+        if(allow.empty | (all(sapply(entries, function(entry)entry$text != "")))){
+            ENTRY.VALUE <<- sapply(entries, function(entry)entry$text)
             w$destroy()
             return(T)
         }
