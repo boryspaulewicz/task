@@ -162,7 +162,7 @@ db.create.data.table = function(data, task.name = TASK.NAME){
         types = c(types, type)
     }
     table.name = paste(task.name, 'data', sep = '_')
-    db.query(sprintf('CREATE TABLE IF NOT EXISTS %s (timestamp TIMESTAMP, session_id INT(11), %s, \
+    db.query(sprintf('CREATE TABLE IF NOT EXISTS %s (timestamp TIMESTAMP, session_id INT(11) NOT NULL, %s, \
 KEY session_id (session_id), \
 FOREIGN KEY (session_id) REFERENCES session (session_id) ON DELETE CASCADE ON UPDATE CASCADE);', table.name,
                      paste(paste(names(data), types), collapse = ', ')))
@@ -742,7 +742,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
         gc()
         data = do.call(trial.code, args)
         if(record.session){
-            all.data = append(USER.DATA, append(args, data))
+            all.data = append(args, data)
             ## Jeżeli to pierwsza próba, to upewnij się, że tabela
             ## istnieje i ma wszystkie potrzebne kolumny i zapisz fakt
             ## rozpoczęcia sesji
@@ -751,8 +751,8 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.query.csv(sprintf('INSERT INTO session (task, name, cnd, stage) VALUES ("%s", "%s", "%s", "started");',
-                                     TASK.NAME, USER.DATA$name, condition))
+                db.query.csv(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage) VALUES ("%s", "%s", %d, "%s", "%s", "started");',
+                                                           TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition))
                 ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
                 SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
                                                     TASK.NAME, USER.DATA$name, condition))[[1]]
@@ -765,8 +765,6 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
     }
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
     if(record.session)db.query(sprintf('UPDATE session SET stage = "finished" WHERE session_id = %d;', SESSION.ID))
-    ##    db.query(sprintf('insert into session (task, name, cnd, stage) values ("%s", "%s", "%s", "finished");',
-    ##                     TASK.NAME, USER.DATA$name, condition))
     WINDOW$set.visible(F)
 }
 
