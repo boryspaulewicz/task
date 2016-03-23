@@ -34,11 +34,14 @@ INSERT INTO conf (par, val) VALUES ('iceweasel', '0'), ('iceweasel_password', 's
 -- sesji poszczególnych zadań
 
 CREATE TABLE IF NOT EXISTS session (
-  task varchar(100) COLLATE utf8_polish_ci NOT NULL,
-  id varchar(100) COLLATE utf8_polish_ci NOT NULL,
-  cnd varchar(50) COLLATE utf8_polish_ci DEFAULT NULL,
-  time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  stage enum('started','finished') COLLATE utf8_polish_ci NOT NULL
+  session_id INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,     
+  time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  task VARCHAR(100) COLLATE utf8_polish_ci NOT NULL,
+  cnd VARCHAR(50) COLLATE utf8_polish_ci DEFAULT NULL,
+  name VARCHAR(100) COLLATE utf8_polish_ci NOT NULL,
+  age INT,
+  gender VARCHAR(2),
+  stage ENUM('started','finished') COLLATE utf8_polish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_polish_ci;
 
 -- Tabela na logi
