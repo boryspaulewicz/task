@@ -363,7 +363,7 @@ gui.choose.item = function(items){
 }
 
 ENTRY.VALUE <<- ""
-gui.get.value = function(title = 'Podaj wartość', label = 'Wartość', visibility = T){
+gui.get.value = function(title = 'Podaj wartość', label = 'Wartość', visibility = T, allow.empty = T){
     ENTRY.VALUE <<- ""
     w = gtkWindow(show = F)
     w$setPosition('center-always')
@@ -375,7 +375,7 @@ gui.get.value = function(title = 'Podaj wartość', label = 'Wartość', visibil
     entry$visibility = visibility
     vb$packStart((btn = gtkButton("Ok")), F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
-        if(entry$text != ""){
+        if(allow.empty | (entry$text != "")){
             ENTRY.VALUE <<- entry$text
             w$destroy()
             return(T)
