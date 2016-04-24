@@ -580,7 +580,7 @@ draw.sin = function(dst, f = 20, angle = 45, contrast = 1.0, sigma = 0.25, mask 
             ## Dla distance = 0 mamy exp(-distance2/2.0) == 1
             scaling = 0.5 * contrast * visibility
             if(scaling > 0){
-                if(mask){
+                if(mask == 1){
                     i = as.numeric((x %% (sq.w * 2)) > sq.w)
                     if((y %% (sq.w * 2)) > sq.w)i = 1 - i
                     if((i == altered.col) && (col.size < 1.0)){
@@ -594,6 +594,10 @@ draw.sin = function(dst, f = 20, angle = 45, contrast = 1.0, sigma = 0.25, mask 
                     }
                     res = (i - 0.5) * visibility + 0.5
                     dst$set.pixel(x, y, c(res, res, res))
+                }else if(mask == 2){
+                    ## Maska w postaci szumu
+                    v = runif(1)
+                    dst$set.pixel(x, y, c(v, v, v))
                 }else{
                     ## Tylko jeżeli w tym punkcie widoczność jest niezerowa, to rysujemy
                     ##
