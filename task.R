@@ -556,7 +556,7 @@ process.inputs = function(){
 }
 
 ## dst to Image
-draw.sin = function(dst, f = 20, angle = 45, contrast = 1.0, sigma = 0.25, mask = F){
+draw.sin = function(dst, f = 20, angle = 45, contrast = 1.0, sigma = 0.25, mask = F, mask.intensity = .5){
     width = dst$size[1] ## WINDOW$get.size()[1]
     height = dst$size[2] ## WINDOW$get.size()[2]
     sigma = sigma * WINDOW$get.size()[1] ## width
@@ -603,7 +603,11 @@ draw.sin = function(dst, f = 20, angle = 45, contrast = 1.0, sigma = 0.25, mask 
                     ##
                     ## Obracamy układ współrzędnych
                     new_y = y * cos_angle + x * sin_angle
-                    v = 0.5 + sin(new_y * two.pi.by.height * f) * scaling
+                    if(mask == 3){
+                        v = .5 + scaling * (((1 - mask.intensity) * sin(new_y * two.pi.by.height * f)) + mask.intensity * runif(1, min = -.5, max = .5))
+                    }else{
+                        v = .5 + scaling * sin(new_y * two.pi.by.height * f)
+                    }
                     dst$set.pixel(x, y, c(v, v, v))
                 }
             }else{
