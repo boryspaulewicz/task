@@ -40,7 +40,7 @@ library(httr)
 library(XML) ## content tego potrzebuje
 library(stringr)
 library(compiler)
-enableJIT(3)
+## enableJIT(3)
 
 ######################################################################
 ### Zmienne globalne
