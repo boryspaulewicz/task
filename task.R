@@ -53,7 +53,7 @@ USER.DATA = list(name = NULL, age = NULL, gender = NULL)
 TASK.START = NULL
 ## DB.IP = NULL
 MYSQL.CON = NULL
-DB.DEBUG = FALSE
+DB.DEBUG = T
 DB.TYPE = 'HTTPS' ## alternatywnie HTTP
 
 ######################################################################
