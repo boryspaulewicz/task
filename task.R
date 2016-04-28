@@ -60,7 +60,7 @@ DB.TYPE = 'HTTPS' ## alternatywnie HTTP
 ### Logi
 
 task.log = function(log){
-    db.query(sprintf('insert into logs (log) values ("%s");', log))
+    ## db.query(sprintf('insert into logs (log) values ("%s");', log))
 }
 
 ######################################################################
