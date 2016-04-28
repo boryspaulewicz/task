@@ -54,58 +54,68 @@ TASK.START = NULL
 ## DB.IP = NULL
 MYSQL.CON = NULL
 DB.DEBUG = FALSE
+DB.TYPE = 'HTTPS' ## alternatywnie HTTP
 
 ######################################################################
 ### Logi
 
 task.log = function(log){
     db.query(sprintf('insert into logs (log) values ("%s");', log))
-    ## print(log)
-    ## cat(paste(date(), '\n', log, '\n', sep = ''), file = '/taskdata/task.log',
-    ##     append = T)
 }
 
 ######################################################################
 ### Baza danych
 
 db.connect = function(passwd){
-##    MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
-##                            password = passwd, port = 80, host = '176.111.127.178')
+    if(DB.TYPE != 'HTTP'){
+        if(!is.null(passwd)){
+            MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
+                                    password = passwd, port = 443, host = '5.189.166.138')
+        }else{
+            gui.error.msg('No password given for the database connection', quit.after = F)
+        }
+    }
 }
 
 ## jako ... można quit.after = F
 db.query = function(q, fetch = F, ip = DB.IP, ...){
     if(DB.DEBUG)print(q)
-    res = GET(paste("http://", ip, "/task/query.php", sep = ''),
-           query = list(do = q))
-    if(status_code(res) != 200)gui.error.msg(paste("Nieudana próba połączenia z bazą danych.\nTreść zapytania:", q), ...)
-    res
-##    if(DB.DEBUG)print(q)
-##    val = NULL
-##    if(!is.null(MYSQL.CON)){
-##        if(dbIsValid(MYSQL.CON)){
-##            res = dbSendQuery(MYSQL.CON, q)
-##            if(fetch){
-##                val = dbFetch(res)
-##            }
-##            dbClearResult(res)
-##        }else{
-##            gui.error.msg("Połączenie z bazą danych straciło ważność", ...)
-##        }
-##    }else{
-##        gui.error.msg("Brak połączenia z bazą danych", ...)
-##    }
-##    val
+    if(DB.TYPE == 'HTTP'){
+        res = GET(paste("http://", ip, "/task/query.php", sep = ''),
+            query = list(do = q))
+        if(status_code(res) != 200)gui.error.msg(paste("Nieudana próba połączenia z bazą danych.\nTreść zapytania:", q), ...)
+        res
+    }else{
+        val = NULL
+        if(!is.null(MYSQL.CON)){
+            if(dbIsValid(MYSQL.CON)){
+                res = dbSendQuery(MYSQL.CON, q)
+                if(fetch){
+                    val = dbFetch(res)
+                }
+                dbClearResult(res)
+            }else{
+                gui.error.msg("Połączenie z bazą danych straciło ważność", ...)
+            }
+        }else{
+            gui.error.msg("Brak połączenia z bazą danych", ...)
+        }
+        val
+    }
 }
 
 ## db.query.csv = function(q, ...)db.query(q, fetch = T, ...)
 
 db.query.csv = function(q, ...){
-    res = db.query(q, ...)
-    text = content(res, "text")
-    if(str_trim(text) != ""){
-        read.csv(textConnection(text), stringsAsFactors = F)
-    }else{ NULL }
+    if(DB.TYPE == 'HTTP'){
+        res = db.query(q, ...)
+        text = content(res, "text")
+        if(str_trim(text) != ""){
+            read.csv(textConnection(text), stringsAsFactors = F)
+        }else{ NULL }
+    }else{
+        db.query(q, fetch = T, ...)
+    }
 }
 
 ## data to lista nazwanych wartości, table to nazwa tabeli
@@ -224,12 +234,13 @@ gui.run.task = function(){
     hb$packStart((vb = gtkVBox()), T, F, 10)
     for(widget in c(l3, task.name, l4, passwd, btn))vb$packStart(widget, F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
-        ## db.connect(passwd$text)
-        ## if(dbIsValid(MYSQL.CON)){
-            TASK.NAME <<- task.name$text
-            w$destroy()
-            gtkMainQuit()
-        ## }else{ gui.error.msg("Nie udało się połączyć z bazą danych. Spróbuj poprawić hasło.", quit.after = F) }
+        if(DB.TYPE != 'HTTP'){
+            db.connect(passwd$text)
+            if(!dbIsValid(MYSQL.CON))gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
+        }
+        TASK.NAME <<- task.name$text
+        w$destroy()
+        gtkMainQuit()
     })
     gSignalConnect(w, 'delete-event', function(w, ...)gtkMainQuit())
     w$show()
@@ -684,7 +695,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
     }else{
         ## Rysujemy pudełka niepodświetlone
         for(i in c(1:length(labels))[-chosen]){
-            if(gradient)rect$set.fill.color(rep(i / (length(labels) + 1), 3))
+            if(gradient)rect$set.fill.color(rep(1 - (i / (length(labels) + 1)), 3))
             rect$set.position(scale.origin + c(rect.dims[1] * (i-1), 0))
             WINDOW$draw(rect)
         }
@@ -765,12 +776,16 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.query.csv(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage) VALUES ("%s", "%s", %d, "%s", "%s", "started");',
-                                                           TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition))
-                ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
-                SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
-                                                    TASK.NAME, USER.DATA$name, condition))[[1]]
-                SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
+                db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage) VALUES ("%s", "%s", %d, "%s", "%s", "started");',
+                                 TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition))
+                if(DB.TYPE == 'HTTP'){
+                    ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
+                    SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
+                                                        TASK.NAME, USER.DATA$name, condition))[[1]]
+                    SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
+                }else{
+                    SESSION.ID <<- db.query.csv('select LAST_INSERT_ID();')[[1]]
+                }
             }
             all.data[['session_id']] = SESSION.ID
             db.insert.data(all.data)
@@ -786,6 +801,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 ### Inicjalizacja
 
 DB.IP <<- db.ip()
+## db.connect()
 if(!interactive())gui.run.task()
 
 ## res = gui.quest(paste('Pytanie', 1:20), 1:4)
