@@ -40,7 +40,7 @@ library(httr)
 library(XML) ## content tego potrzebuje
 library(stringr)
 library(compiler)
-## enableJIT(3) ##! Bez kompilacji teraz
+enableJIT(3)
 
 ######################################################################
 ### Zmienne globalne
@@ -802,7 +802,10 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 ### Inicjalizacja
 
 DB.IP <<- db.ip()
-## db.connect()
-if(!interactive())gui.run.task()
+if(!interactive()){
+    gui.run.task()
+}else{
+    db.connect(gui.get.value('Baza danych', 'Hasło'))
+}
 
 ## res = gui.quest(paste('Pytanie', 1:20), 1:4)
