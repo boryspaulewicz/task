@@ -46,6 +46,7 @@ library(compiler)
 ### Zmienne globalne
 
 TASK.NAME = "template"
+TAG = ""
 SESSION.ID = -1
 CHOSEN.BUTTON = ""
 ## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
@@ -229,16 +230,19 @@ gui.run.task = function(){
     l4 = gtkLabel("Hasło")
     passwd = gtkEntry()
     passwd$visibility = F
+    l5 = gtkLabel("Znacznik")
+    tag = gtkEntry()
     btn = gtkButton("Ok")
     w$add((hb = gtkHBox()))
     hb$packStart((vb = gtkVBox()), T, F, 10)
-    for(widget in c(l3, task.name, l4, passwd, btn))vb$packStart(widget, F, F, 10)
+    for(widget in c(l3, task.name, l4, passwd, l5, tag, btn))vb$packStart(widget, F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
         if(DB.TYPE != 'HTTP'){
             db.connect(passwd$text)
             if(!dbIsValid(MYSQL.CON))gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
         }
         TASK.NAME <<- task.name$text
+        TAG <<- tag$text
         w$destroy()
         gtkMainQuit()
     })
@@ -777,8 +781,8 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage) VALUES ("%s", "%s", %d, "%s", "%s", "started");',
-                                 TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition))
+                db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s");',
+                                 TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition, TAG))
                 if(DB.TYPE == 'HTTP'){
                     ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
                     SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',

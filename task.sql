@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS session (
   name VARCHAR(100) COLLATE utf8_polish_ci NOT NULL,
   age INT,
   gender VARCHAR(2),
-  stage ENUM('started','finished') COLLATE utf8_polish_ci NOT NULL
+  stage ENUM('started','finished') COLLATE utf8_polish_ci NOT NULL,
+  tag VARCHAR(50)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_polish_ci;
 
 -- Tabela na logi
