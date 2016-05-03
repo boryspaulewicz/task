@@ -60,7 +60,7 @@ DB.TYPE = 'HTTPS' ## alternatywnie HTTP
 ### Logi
 
 task.log = function(log){
-    db.query(sprintf('insert into logs (log) values ("%s");', log))
+    ## db.query(sprintf('insert into logs (log) values ("%s");', log))
 }
 
 ######################################################################
@@ -91,7 +91,7 @@ db.query = function(q, fetch = F, ip = DB.IP, ...){
             if(dbIsValid(MYSQL.CON)){
                 res = dbSendQuery(MYSQL.CON, q)
                 if(fetch){
-                    val = dbFetch(res)
+                    val = dbFetch(res, n = -1)
                 }
                 dbClearResult(res)
             }else{
