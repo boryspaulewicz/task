@@ -5,8 +5,6 @@ https://sourceforge.net/projects/win32diskimager/
 
 TODO: 
 
-Możliwość tagowania przez administratora sesji, żeby potem można było zastosować łatwo dodatkową selekcję
+Zapis logów w bazie danych (osobna tabela)
 
-zapis logów w bazie danych (osobna tabela)
-
-dodać zapis początkowej wartości na skali (tej wylosowanej), żeby móc sprawdzić, czy osoba badana w ogóle coś robi
+Dodać zapis początkowej wartości na skali (tej wylosowanej), żeby móc sprawdzić, czy osoba badana w ogóle coś robi
