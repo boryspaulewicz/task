@@ -5,11 +5,7 @@ https://sourceforge.net/projects/win32diskimager/
 
 TODO: 
 
-mysql-client w systemie
-
-session id jako obcy klucz w tabelach danych z procedur, pozwalajacy usuwac od razu cale sesje.
-
-sprawdzić pomiar czasu reakcji - od którego momentu liczy
+Możliwość tagowania przez administratora sesji, żeby potem można było zastosować łatwo dodatkową selekcję
 
 zapis logów w bazie danych (osobna tabela)
 
