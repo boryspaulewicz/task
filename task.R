@@ -706,7 +706,8 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
         }
         ## Rysujemy pudełko podświetlone
         if(chosen < (length(labels) + 1)){
-            if(gradient)rect$set.fill.color(rep(chosen / (length(labels) + 1), 3))
+            ## Podświetlone pudełko nie ma zmieniać kolor
+            ## if(gradient)rect$set.fill.color(rep(chosen / (length(labels) + 1), 3))
             rect$set.position(scale.origin + c(rect.dims[1] * (chosen-1), 0))
             rect$set.outline.thickness(3)
             WINDOW$draw(rect)
