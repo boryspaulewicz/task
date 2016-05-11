@@ -671,7 +671,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
     mp = (mp.raw[1] - scale.origin[1]) / (width * WINDOW$get.size()[1])
     mp.y = (mp.raw[2] - scale.origin[2]) / (height * WINDOW$get.size()[2])
     chosen = length(labels) + 1
-    if(all(c(mp >= 0, mp <= 1, mp.y >= .5, mp.y <= 1.5))){
+    if(all(c(mp >= 0, mp <= 1, mp.y >= -.5, mp.y <= .5))){
         chosen = ceiling(mp / (1 / length(labels)))
     }else{
         chosen = length(labels) + 1
