@@ -702,17 +702,20 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
         for(i in c(1:length(labels))){
             if(gradient)rect$set.fill.color(rep(1 - (i / (length(labels) + 1)), 3))
             rect$set.position(scale.origin + c(rect.dims[1] * (i-1), 0))
+            if(i == chosen){
+                rect$set.outline.thickness(3)
+            }
             WINDOW$draw(rect)
         }
-        ## Rysujemy pudełko podświetlone
-        if(chosen < (length(labels) + 1)){
-            ## Podświetlone pudełko nie ma zmieniać kolor
-            ## if(gradient)rect$set.fill.color(rep(chosen / (length(labels) + 1), 3))
-            rect$set.position(scale.origin + c(rect.dims[1] * (chosen-1), 0))
-            rect$set.outline.thickness(3)
-            WINDOW$draw(rect)
-            rect$set.outline.thickness(1)
-        }
+        ## ## Rysujemy pudełko podświetlone
+        ## if(chosen < (length(labels) + 1)){
+        ##     ## Podświetlone pudełko nie ma zmieniać kolor
+        ##     ## if(gradient)rect$set.fill.color(rep(chosen / (length(labels) + 1), 3))
+        ##     rect$set.position(scale.origin + c(rect.dims[1] * (chosen-1), 0))
+        ##     rect$set.outline.thickness(3)
+        ##     WINDOW$draw(rect)
+        ##     rect$set.outline.thickness(1)
+        ## }
         ## Rysujemy etykiety
         for(i in 1:length(labels)){
             label$set.string(labels[i])
