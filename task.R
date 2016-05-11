@@ -727,7 +727,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
             WINDOW$draw(label)
         }
     }
-    if(draw.bar)WINDOW$draw(bar)
+    if(all(c(mp >= 0, mp <= 1, mp.y >= .5, mp.y <= 1.5, draw.bar)))WINDOW$draw(bar)
     ## Zwracamy wskazywany punkt
     c(pointed, chosen)
 }
