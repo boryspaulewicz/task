@@ -704,6 +704,8 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
             rect$set.position(scale.origin + c(rect.dims[1] * (i-1), 0))
             if(i == chosen){
                 rect$set.outline.thickness(3)
+            }else{
+                rect$set.outline.thickness(1)
             }
             WINDOW$draw(rect)
         }
