@@ -698,8 +698,8 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
             WINDOW$draw(label)
         }
     }else{
-        ## Rysujemy pudełka niepodświetlone
-        for(i in c(1:length(labels))[-chosen]){
+        ## Rysujemy wszystkie pudełka
+        for(i in c(1:length(labels))){
             if(gradient)rect$set.fill.color(rep(1 - (i / (length(labels) + 1)), 3))
             rect$set.position(scale.origin + c(rect.dims[1] * (i-1), 0))
             WINDOW$draw(rect)
