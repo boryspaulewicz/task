@@ -5,6 +5,8 @@ https://sourceforge.net/projects/win32diskimager/
 
 TODO: 
 
+nie ma zmieniać statusu sesji na finished, jeżeli ktoś wyszedł z niej escapem
+
 losowanie warunku z pominięciem sesji admina
 
 Zapis logów w bazie danych (osobna tabela)
