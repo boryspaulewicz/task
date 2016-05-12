@@ -452,17 +452,20 @@ gui.user.data = function(){
 }
 
 ## Do wprowadzania danych kwestionariuszowych przez administratora badania
-gui.quest = function(items, answers, title = 'Dane kwestionariuszowe', width = .5){
+gui.quest = function(items, answers, title = 'Dane kwestionariuszowe', width = .5, force.all = T){
     res = rep(-1, length(items))
     while(any(res == -1)){
-        res = gui.quest.win(items = items, answers = answers, width = width, title = title, values = res)
+        res = gui.quest.win(items = items, answers = answers, width = width, title = title, values = res, force.all = force.all)
+        if(!force.all)break
     }
     res
 }
 
 ## Funkcja, która powinna być wywoływana przez gui.quest - żeby
-## zamknięcie okna nie było możliwe do momentu wypełnienia całości
-gui.quest.win = function(items, answers, title = 'Dane kwestionariuszowe', width = .5, values = NULL){
+## zamknięcie okna nie było możliwe do momentu wypełnienia
+## całości. Items to wektor stringów, answers też, values to
+## ewentualne odpowiedzi do wstawienia od razu.
+gui.quest.win = function(items, answers, title = 'Dane kwestionariuszowe', width = .5, values = NULL, force.all = T){
     w = gtkWindow()
     w$setPosition('center-always')
     w$title = title
@@ -471,6 +474,7 @@ gui.quest.win = function(items, answers, title = 'Dane kwestionariuszowe', width
     b0$packStart((b1 = gtkVBox()), T, T, 10)
     b1$packStart((scroll = gtkScrolledWindow()), T, T, 10)
     scroll$addWithViewport((vb = gtkVBox()))
+    w$setSizeRequest(round(WINDOW$get.size()[1] * width), round(WINDOW$get.size()[2] * .8))
     gui.items = NULL
     gui.values = NULL
     label.width = 0
@@ -499,7 +503,7 @@ gui.quest.win = function(items, answers, title = 'Dane kwestionariuszowe', width
         done = T
         for(i in 1:length(gui.items)){
             gui.values[[i]] <<- gui.items[[i]]$active
-            if(gui.values[[i]] == -1)done = F
+            if(force.all & (gui.values[[i]] == -1))done = F
         }
         if(done){
             w$destroy()
