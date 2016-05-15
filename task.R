@@ -647,7 +647,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
     label = new(Text)
     label$set.font(FONT)
     label$set.scale(c(label.scale, label.scale))
-    ## Kreseczka dla wersji ciągłej
+    ## Kreseczka pionowa wskazująca miejsce na skali
     bar = new(RectangleShape, c(WINDOW$get.size() * c(width * .01, height)))
     bar$set.fill.color(c(0, 0, 1, .5))
     bar$set.origin(bar$get.local.bounds()[3:4] * .5)
@@ -658,6 +658,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
         rect.dims = WINDOW$get.size() * c(width / length(labels), height)
     }
     rect = new(RectangleShape, rect.dims)
+    bounds = rep(WINDOW$get.size(), 2) * c(.5 - width / 2, position - height / 2, .5 + width / 2, position + height / 2)
     if(length(labels) == 2){
         rect$set.origin(rect.dims / 2)
     }else{
@@ -672,16 +673,15 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
     rect$set.position(scale.origin)
     ## Ustalamy, która opcja jest wskazywana
     mp.raw = mouse.get.position()
+    ## Przeskalowana pozycja myszki w poziomie
     mp = (mp.raw[1] - scale.origin[1]) / (width * WINDOW$get.size()[1])
-    mp.y = (mp.raw[2] - scale.origin[2]) / (height * WINDOW$get.size()[2])
     chosen = length(labels) + 1
-    if(all(c(mp >= 0, mp <= 1, mp.y >= -.5, mp.y <= .5))){
+    mouse.in.scale = all(c(mp.raw >= bounds[1:2], mp.raw <= bounds[3:4]))
+    if(mouse.in.scale){
         chosen = ceiling(mp / (1 / length(labels)))
     }else{
         chosen = length(labels) + 1
     }
-       ## (mp.raw[2] >= rect.bounds['top']) &&
-       ## (mp.raw[2] <= sum(rect.bounds[c(2, 4)])))
     pointed = max(min(mp, 1), 0)
     bar$set.position(scale.origin + c(WINDOW$get.size()[1] * width * pointed, 0))
     if(length(labels) == 2){
@@ -731,7 +731,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
             WINDOW$draw(label)
         }
     }
-    if(all(c(mp >= 0, mp <= 1, mp.y >= .5, mp.y <= 1.5, draw.bar)))WINDOW$draw(bar)
+    if(mouse.in.scale)WINDOW$draw(bar)
     ## Zwracamy wskazywany punkt
     c(pointed, chosen)
 }
