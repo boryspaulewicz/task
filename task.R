@@ -156,7 +156,9 @@ db.random.condition = function(conditions, task.name = TASK.NAME){
     sample(names(ct[ct == min(ct)]), 1)
 }
 
-## Tworzy standardową tabelę danych zadania, trzeba podać przykładowe dane jako listę
+## Tworzy standardową tabelę danych zadania, trzeba podać przykładowe
+## dane jako listę - bez danych osobowych, ani identyfikatora sesji,
+## bo ten jest automatycznie odczytywany
 db.create.data.table = function(data, task.name = TASK.NAME){
     types = NULL
     q = ''
