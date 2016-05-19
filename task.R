@@ -660,7 +660,6 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
         rect.dims = WINDOW$get.size() * c(width / length(labels), height)
     }
     rect = new(RectangleShape, rect.dims)
-    bounds = rep(WINDOW$get.size(), 2) * c(.5 - width / 2, position - height / 2, .5 + width / 2, position + height / 2)
     if(length(labels) == 2){
         rect$set.origin(rect.dims / 2)
     }else{
@@ -669,10 +668,11 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
     rect$set.fill.color(background.color)
     rect$set.outline.color(c(1, 1, 1))
     rect$set.outline.thickness(1)
-    rect.bounds = rect$get.local.bounds()
     ## Położenie lewej krawędzi pudełek na ekranie
     scale.origin = WINDOW$get.size() * c((1 - width) / 2, position)
     rect$set.position(scale.origin)
+    ## rect.bounds = rect$get.local.bounds()
+    bounds = rep(WINDOW$get.size(), 2) * c(.5 - width / 2, position + height / 2, .5 + width / 2, position + 1.5 * height)
     ## Ustalamy, która opcja jest wskazywana
     mp.raw = mouse.get.position()
     ## Przeskalowana pozycja myszki w poziomie
