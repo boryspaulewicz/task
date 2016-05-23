@@ -248,7 +248,7 @@ gui.run.task = function(){
             db.connect(passwd$text)
             if(!dbIsValid(MYSQL.CON))gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
             DB.PASSWORD <<- passwd$text
-            db.disconnect(MYSQL.CON)
+            db.disconnect()
         }
         TASK.NAME <<- task.name$text
         TAG <<- tag$text
