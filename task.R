@@ -55,6 +55,7 @@ TASK.START = NULL
 ## DB.IP = NULL
 MYSQL.CON = NULL
 DB.DEBUG = T
+DB.PASSWORD = NULL
 DB.TYPE = 'HTTPS' ## alternatywnie HTTP
 
 ######################################################################
@@ -76,6 +77,10 @@ db.connect = function(passwd){
             gui.error.msg('No password given for the database connection', quit.after = F)
         }
     }
+}
+
+db.disconnect = function(){
+    dbDisconnect(MYSQL.CON)
 }
 
 ## jako ... można quit.after = F
@@ -242,6 +247,8 @@ gui.run.task = function(){
         if(DB.TYPE != 'HTTP'){
             db.connect(passwd$text)
             if(!dbIsValid(MYSQL.CON))gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
+            DB.PASSWORD <<- passwd$text
+            db.disconnect(MYSQL.CON)
         }
         TASK.NAME <<- task.name$text
         TAG <<- tag$text
@@ -761,6 +768,8 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
     if('trial' %in% names(cnds))stop('trial is not a valid factor name')
     ## Zawsze sprawdzamy, czy nie trzeba dodać kolumn danych, a więc zawsze robimy db.create.data.table
     create.table = T ## !(paste(TASK.NAME, 'data', sep = '_') %in% db.query.csv('show tables;')[,1])
+    db.connect(DB.PASSWD)
+    if(!dbIsValid(MYSQL.CON))gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
     if(is.null(nof.trials)){
         nof.trials = nrow(cnds) * b * n
     }else{
@@ -803,9 +812,10 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
             db.insert.data(all.data)
         }
         if(is.null(data) || (!is.null(max.time) && (CLOCK$time - TASK.START) > max.time))break
-    }
+    } ## pętla po próbach
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
-    if(record.session)db.query(sprintf('UPDATE session SET stage = "finished" WHERE session_id = %d;', SESSION.ID))
+    ## Zmieniamy status na zakończony tylko, jeżeli nie wyszedł przed czasem (wtedy standardowo data == NULL)
+    if(record.session & (!is.null(data)))db.query(sprintf('UPDATE session SET stage = "finished" WHERE session_id = %d;', SESSION.ID))
     WINDOW$set.visible(F)
 }
 
@@ -816,7 +826,7 @@ DB.IP <<- db.ip()
 if(!interactive()){
     gui.run.task()
 }else{
-    db.connect(gui.get.value('Baza danych', 'Hasło'))
+    DB.PASSWORD <<- gui.get.value('Baza danych', 'Hasło', visibility = F)
 }
 
 ## res = gui.quest(paste('Pytanie', 1:20), 1:4)
