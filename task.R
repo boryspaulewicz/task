@@ -672,7 +672,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
     scale.origin = WINDOW$get.size() * c((1 - width) / 2, position)
     rect$set.position(scale.origin)
     ## rect.bounds = rect$get.local.bounds()
-    bounds = rep(WINDOW$get.size(), 2) * c(.5 - width / 2, position + height / 2, .5 + width / 2, position + 1.5 * height)
+    bounds = c(WINDOW$get.size(), WINDOW$get.size()) * c(.5 - width / 2, position - height / 2, .5 + width / 2, position + height / 2)
     ## Ustalamy, która opcja jest wskazywana
     mp.raw = mouse.get.position()
     ## Przeskalowana pozycja myszki w poziomie
@@ -733,7 +733,7 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
             WINDOW$draw(label)
         }
     }
-    if(mouse.in.scale)WINDOW$draw(bar)
+    if(mouse.in.scale & draw.bar)WINDOW$draw(bar)
     ## Zwracamy wskazywany punkt
     c(pointed, chosen)
 }
