@@ -768,7 +768,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
     if('trial' %in% names(cnds))stop('trial is not a valid factor name')
     ## Zawsze sprawdzamy, czy nie trzeba dodać kolumn danych, a więc zawsze robimy db.create.data.table
     create.table = T ## !(paste(TASK.NAME, 'data', sep = '_') %in% db.query.csv('show tables;')[,1])
-    db.connect(DB.PASSWD)
+    db.connect(DB.PASSWORD)
     if(!dbIsValid(MYSQL.CON))gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
     if(is.null(nof.trials)){
         nof.trials = nrow(cnds) * b * n
@@ -813,10 +813,11 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
         }
         if(is.null(data) || (!is.null(max.time) && (CLOCK$time - TASK.START) > max.time))break
     } ## pętla po próbach
+    WINDOW$set.visible(F)
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
     ## Zmieniamy status na zakończony tylko, jeżeli nie wyszedł przed czasem (wtedy standardowo data == NULL)
     if(record.session & (!is.null(data)))db.query(sprintf('UPDATE session SET stage = "finished" WHERE session_id = %d;', SESSION.ID))
-    WINDOW$set.visible(F)
+    db.disconnect()
 }
 
 ######################################################################
