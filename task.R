@@ -68,7 +68,7 @@ task.log = function(log){
 ######################################################################
 ### Baza danych
 
-db.connect = function(passwd){
+db.connect = function(passwd = DB.PASSWORD){
     if(DB.TYPE != 'HTTP'){
         if(!is.null(passwd)){
             MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
@@ -153,8 +153,15 @@ db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("sele
 ## Wybiera losową wersję spośród tych faktycznie ukończonych, których
 ## do tej pory było najmniej
 db.random.condition = function(conditions, task.name = TASK.NAME){
+    if(is.null(MYSQL.CON) || (!dbIsValid(MYSQL.CON))){
+        db.connect(DB.PASSWORD)
+        close.connection = T
+    }else{
+        close.connection = F
+    }
     ct = table(c(db.query.csv(sprintf('select cnd from session where task = \"%s\" and stage = "finished" and name != "admin";',
                                         task.name))$cnd, conditions))
+    if(close.connection)db.disconnect()
     ct = ct[names(ct) != 'undefined']
     ## Chcemy losować tylko spośrod tych, które są obecnie reprezentowane w folderze condition
     ct = ct[names(ct) %in% conditions]
@@ -246,9 +253,12 @@ gui.run.task = function(){
     gSignalConnect(btn, 'clicked', function(btn){
         if(DB.TYPE != 'HTTP'){
             db.connect(passwd$text)
-            if(!dbIsValid(MYSQL.CON))gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
-            DB.PASSWORD <<- passwd$text
-            db.disconnect()
+            if(!dbIsValid(MYSQL.CON)){
+                gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
+            }else{
+                DB.PASSWORD <<- passwd$text
+                db.disconnect()
+            }
         }
         TASK.NAME <<- task.name$text
         TAG <<- tag$text
