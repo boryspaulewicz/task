@@ -561,7 +561,15 @@ BUTTON.PRESSED = BUTTON.RELEASED = rep(0, Button.ButtonCount + 1)
 
 KEYS = CORRECT.KEY = BUTTONS = ACC = RT = NULL
 
+######################################################################
 ## Małe funkcje pomocnicze
+
+scen = function(k, b, n){
+    scenario = NULL
+    for(i in 1:n)scenario = c(scenario, sample(rep(1:k, b)))
+    scenario
+}
+
 
 center.win = function(x)center(x, WINDOW)
 
@@ -781,8 +789,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
         n = 1
         b = ceiling(nof.trials / nrow(cnds))
     }
-    scenario = NULL
-    for(i in 1:n)scenario = c(scenario, sample(rep(1:nrow(cnds), b)))
+    scenario = scen(nrow(cnds), b, n)
     WINDOW$set.visible(T)
     TASK.START <<- CLOCK$time
     task.log(sprintf("Starting task %s by user %s", TASK.NAME, USER.DATA$name))

@@ -51,3 +51,15 @@ create table if not exists logs(
  log varchar(300);
  time timestamp not null default current_timestamp on update current_timestamp);
  
+-- PROCEDURY
+
+DELIMITER //
+CREATE PROCEDURE task.getdata(name VARCHAR (255))
+BEGIN
+        SET @name = name;
+        SET @sql_txt = concat('SELECT session.name, session.age, session.gender, session.cnd, session.time, session.stage, session.tag, ', @name, 'JOIN _data.* USING(session_id);');
+        PREPARE stmt FROM @sql_txt;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+END
+//
