@@ -547,7 +547,7 @@ if((!exists('WINDOW')) || (class(WINDOW) == 'function') ){
 
 WINDOW$set.visible(F)
 WINDOW$set.mouse.cursor.visible(F)
-WINDOW$set.vertical.sync.enabled(T)
+## WINDOW$set.vertical.sync.enabled(T)
 WIDTH = WINDOW$get.size()[1]
 HEIGHT = WINDOW$get.size()[2]
 EVENT = new(Event)
@@ -791,6 +791,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
     }
     scenario = scen(nrow(cnds), b, n)
     WINDOW$set.visible(T)
+    WINDOW$set.vertical.sync.enabled(T)
     TASK.START <<- CLOCK$time
     task.log(sprintf("Starting task %s by user %s", TASK.NAME, USER.DATA$name))
     for(trial in 1:nof.trials){
@@ -825,6 +826,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
         }
         if(is.null(data) || (!is.null(max.time) && (CLOCK$time - TASK.START) > max.time))break
     } ## pętla po próbach
+    WINDOW$set.vertical.sync.enabled(F)
     WINDOW$set.visible(F)
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
     ## Zmieniamy status na zakończony tylko, jeżeli nie wyszedł przed czasem (wtedy standardowo data == NULL)
