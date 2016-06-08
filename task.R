@@ -834,7 +834,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.register.session()
+                db.register.session(condition = condition)
                 ## db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s");',
                 ##                  TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition, TAG))
                 ## if(DB.TYPE == 'HTTP'){
