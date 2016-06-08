@@ -664,7 +664,7 @@ SCALE.POSITION = .6
 SCALE.HEIGHT = .05
 draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POSITION, width = SCALE.WIDTH, height = SCALE.HEIGHT,
                       background.color = c(0, 0, 0), gradient = F, draw.bar = T, highlight.label = F, highlight.box = T,
-                      label.scale = 1){
+                      label.scale = 1, center.labels = F){
     ## Obiekt do rysowania etykiet
     label = new(Text)
     label$set.font(FONT)
@@ -717,7 +717,11 @@ draw.scale = function(labels = c('LOW', 'AVERAGE', 'HIGH'), position = SCALE.POS
             ## (width, ...)
             bounds = label$get.local.bounds()
             ## Dla pierwszej etykiety origin jest z lewej, dla drugiej z prawej
-            label$set.origin(c(c(0, bounds['width'])[i], bounds[c('top', 'height')] %*% c(1, .5)))
+            if(center.labels){
+                label$set.origin(c(bounds['width'] / 2, bounds[c('top', 'height')] %*% c(1, .5)))
+            }else{
+                label$set.origin(c(c(0, bounds['width'])[i], bounds[c('top', 'height')] %*% c(1, .5)))
+            }
             label$set.position(scale.origin + c(c(0, width * WINDOW$get.size()[1])[i],
                                                 bounds['height'] + WINDOW$get.size()[2] * height))
             label$set.color(c(1, 1, 1))
