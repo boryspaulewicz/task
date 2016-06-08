@@ -147,6 +147,21 @@ db.ip = function(){
     }
 }
 
+## Rejestruje sesję dla danej procedury (status started) i zwraca jej identyfikator
+db.register.session = function(task.name = TASK.NAME, user.data = USER.DATA, condition = 'default', tag = TAG){
+    db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s");',
+                     task.name, user.data$name, user.data$age, user.data$gender, condition, tag))
+    if(DB.TYPE == 'HTTP'){
+        ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
+        SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
+                                            task.name, user.data$name, condition))[[1]]
+        SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
+    }else{
+        SESSION.ID <<- db.query.csv('select LAST_INSERT_ID();')[[1]]
+    }
+    SESSION.ID
+}
+
 ## Zwraca listę warunków wykonanych do tej pory w ramach sesji tego zadania
 db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("select cnd from session where task = \"%s\";", task.name))$cnd
 
@@ -814,16 +829,17 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     task.log(paste("Creating table for task", TASK.NAME))
                     db.create.data.table(all.data)
                 }
-                db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s");',
-                                 TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition, TAG))
-                if(DB.TYPE == 'HTTP'){
-                    ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
-                    SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
-                                                        TASK.NAME, USER.DATA$name, condition))[[1]]
-                    SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
-                }else{
-                    SESSION.ID <<- db.query.csv('select LAST_INSERT_ID();')[[1]]
-                }
+                db.register.session()
+                ## db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s");',
+                ##                  TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition, TAG))
+                ## if(DB.TYPE == 'HTTP'){
+                ##     ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
+                ##     SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
+                ##                                         TASK.NAME, USER.DATA$name, condition))[[1]]
+                ##     SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
+                ## }else{
+                ##     SESSION.ID <<- db.query.csv('select LAST_INSERT_ID();')[[1]]
+                ## }
             }
             all.data[['session_id']] = SESSION.ID
             db.insert.data(all.data)
