@@ -162,6 +162,11 @@ db.register.session = function(task.name = TASK.NAME, user.data = USER.DATA, con
     SESSION.ID
 }
 
+## Zmiana statusu sesji na zakończoną
+db.mark.session.finished = function(session.id = SESSION.ID){
+    db.query(sprintf('UPDATE session SET stage = "finished" WHERE session_id = %d;', session.id))
+}
+
 ## Zwraca listę warunków wykonanych do tej pory w ramach sesji tego zadania
 db.session.condition = function(task.name = TASK.NAME)db.query.csv(sprintf("select cnd from session where task = \"%s\";", task.name))$cnd
 
@@ -850,7 +855,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
     WINDOW$set.visible(F)
     task.log(sprintf("Completed task %s by user %s", TASK.NAME, USER.DATA$name))
     ## Zmieniamy status na zakończony tylko, jeżeli nie wyszedł przed czasem (wtedy standardowo data == NULL)
-    if(record.session & (!is.null(data)))db.query(sprintf('UPDATE session SET stage = "finished" WHERE session_id = %d;', SESSION.ID))
+    if(record.session & (!is.null(data)))db.mark.session.finished()
     db.disconnect()
 }
 
