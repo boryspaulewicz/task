@@ -72,7 +72,7 @@ db.connect = function(passwd = DB.PASSWORD){
     if(DB.TYPE != 'HTTP'){
         if(!is.null(passwd)){
             MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
-                                    password = passwd, port = 443, host = '5.189.166.138')
+                                    password = passwd, port = 3306, host = '5.189.166.138')
         }else{
             gui.error.msg('No password given for the database connection', quit.after = F)
         }
