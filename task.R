@@ -35,7 +35,6 @@
 
 library(sfml)
 library(RGtk2)
-library(RMySQL)
 library(httr)
 library(XML) ## content tego potrzebuje
 library(stringr)
@@ -52,6 +51,9 @@ CHOSEN.BUTTON = ""
 ## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
 USER.DATA = list(name = NULL, age = NULL, gender = NULL)
 TASK.START = NULL
+
+library(RMySQL)
+
 ## DB.IP = NULL
 MYSQL.CON = NULL
 DB.DEBUG = T
@@ -72,7 +74,9 @@ db.connect = function(passwd = DB.PASSWORD){
     if(DB.TYPE != 'HTTP'){
         if(!is.null(passwd)){
             MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
-                                    password = passwd, port = 443, host = '5.189.166.138')
+                                    password = passwd, port = 3306, ## 443,
+                                    host = '5.189.166.138')
+            db.query('SET NAMES utf8;')
         }else{
             gui.error.msg('No password given for the database connection', quit.after = F)
         }
