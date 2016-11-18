@@ -74,7 +74,7 @@ db.connect = function(passwd = DB.PASSWORD){
     if(DB.TYPE != 'HTTP'){
         if(!is.null(passwd)){
             MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
-                                    password = passwd, port = 3306, ## 443,
+                                    password = passwd, port = 443, ## port = 3306, ## 443,
                                     host = '5.189.166.138')
             db.query('SET NAMES utf8;')
         }else{
