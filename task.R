@@ -470,7 +470,7 @@ gui.user.data = function(){
         }
         msg = ''
         if(gender$active < 0)msg = paste(msg, 'Nie wybrano płci\n', sep = '')
-        if(length(grep('[0-9][0-9]', gender$age) == 0)msg = paste(msg, 'Nie podano poprawnie wieku\n', sep = '')
+        if(length(grep('^[0-9][0-9]$', gender$age) == 0)msg = paste(msg, 'Nie podano poprawnie wieku\n', sep = '')
         if(is.na(as.numeric(age$text)))msg = paste(msg, 'Błąd w polu wieku\n', sep = '')
         if(length(grep('^[a-z][a-z][0-9][0-9][0-9][0-9]$', name$text)) == 0)msg =
             paste(msg, 'Identyfikator musi się składac z dwóch liter (inicjałów),\n dnia (dwie cyfry) i miesiąca (dwie cyfry) urodzenia\n', sep = '')
