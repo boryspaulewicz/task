@@ -128,6 +128,19 @@ db.query.csv = function(q, ...){
     }
 }
 
+## Ściągnij dane do procedury o podanej nazwie
+db.get.data = function(task.name){
+    if(is.null(MYSQL.CON) || (!dbIsValid(MYSQL.CON))){
+        was.invalid = T
+        db.connect()
+    }else{
+        was.invalid = F
+    }
+    res = db.query.csv(sprintf('select * from session join %s_data using(session_id);', task.name))
+    if(was.invalid)db.disconnect()
+    res
+}
+
 ## data to lista nazwanych wartości, table to nazwa tabeli
 db.insert.query = function(data, table){
     nms = vls = "("
@@ -228,6 +241,7 @@ download.run.task = function(name = TASK.NAME){
     download.task(name)
     task.log(sprintf("Loading main task script for task \"%s\"", name))
     setwd(sprintf("/taskdata/%s", name))
+    TASK.NAME <<- TASK.NAME
     source(sprintf("%s.R", name))
 }
 
