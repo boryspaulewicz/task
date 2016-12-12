@@ -14,7 +14,6 @@
 ## Tabela sesji session: task, id, cnd, timestamp, stage
 ## to 'started', albo 'finished' - nie każdemu udaje się skończyć.
 
-
 ## Zmienne globalne zapisujemy dużymi literami
 ##
 ## Komunikacja z bazą danych za pomocą skryptu php na serwerze, przez port HTTP
@@ -51,6 +50,8 @@ CHOSEN.BUTTON = ""
 ## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
 USER.DATA = list(name = NULL, age = NULL, gender = NULL)
 TASK.START = NULL
+TASKLIB.SHA = NULL
+TASK.SHA = NULL
 
 library(RMySQL)
 
@@ -167,7 +168,7 @@ db.ip = function(){
 ## Rejestruje sesję dla danej procedury (status started) i zwraca jej identyfikator
 db.register.session = function(task.name = TASK.NAME, user.data = USER.DATA, condition = 'default', tag = TAG){
     db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s");',
-                     task.name, user.data$name, user.data$age, user.data$gender, condition, tag))
+                                           task.name, user.data$name, user.data$age, user.data$gender, condition,  tag))
     if(DB.TYPE == 'HTTP'){
         ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
         SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
@@ -238,10 +239,11 @@ db.insert.data = function(data, name = TASK.NAME){
 ### Ściąganie procedury
 
 download.run.task = function(name = TASK.NAME){
+    TASK.NAME <<- TASK.NAME
     download.task(name)
     task.log(sprintf("Loading main task script for task \"%s\"", name))
     setwd(sprintf("/taskdata/%s", name))
-    TASK.NAME <<- TASK.NAME
+    TASK.SHA <<- system('git rev-parse HEAD', intern = T)
     source(sprintf("%s.R", name))
 }
 
@@ -856,16 +858,6 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
                     db.create.data.table(all.data)
                 }
                 db.register.session(condition = condition)
-                ## db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s");',
-                ##                  TASK.NAME, USER.DATA$name, USER.DATA$age, USER.DATA$gender, condition, TAG))
-                ## if(DB.TYPE == 'HTTP'){
-                ##     ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
-                ##     SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
-                ##                                         TASK.NAME, USER.DATA$name, condition))[[1]]
-                ##     SESSION.ID <<- SESSION.ID[length(SESSION.ID)]
-                ## }else{
-                ##     SESSION.ID <<- db.query.csv('select LAST_INSERT_ID();')[[1]]
-                ## }
             }
             all.data[['session_id']] = SESSION.ID
             db.insert.data(all.data)
@@ -885,6 +877,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 
 DB.IP <<- db.ip()
 if(!interactive()){
+    TASKLIB.SHA <<- system('git rev-parse HEAD', intern = T)
     gui.run.task()
 }else{
     DB.PASSWORD <<- gui.get.value('Baza danych', 'Hasło', visibility = F)
