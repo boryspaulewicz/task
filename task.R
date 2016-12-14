@@ -166,7 +166,10 @@ db.ip = function(){
 }
 
 ## Rejestruje sesję dla danej procedury (status started) i zwraca jej identyfikator
-db.register.session = function(task.name = TASK.NAME, user.data = USER.DATA, condition = 'default', tag = TAG){
+db.register.session = function(task.name = TASK.NAME, user.data = USER.DATA, condition = 'default', tag = TAG, reuse_session_id = T){
+    ## Jeżeli to jest kolejna procedura uruchomiona przez tą samą
+    ## osobę, to używamy tego samego identyfikatora sesji.
+    if(!is.null(SESSION.ID))if(reuse_session_id)return(SESSION.ID)
     TASK.SHA <<- system('git rev-parse HEAD', intern = T)
     db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag, tasklib_sha, task_sha) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s", "%s", "%s");',
                                            task.name, user.data$name, user.data$age, user.data$gender, condition,  tag, TASKLIB.SHA, TASK.SHA))
@@ -824,7 +827,7 @@ source.random.condition = function(){
 ## trial.code jest wykonywana na losowanych warunkach, wartości
 ## czynników definiujących warunki są jej przekazywane jako argumenty
 run.trials = function(trial.code, cnds, b = 1, n = 1,
-    max.time = NULL, nof.trials = NULL, condition = 'default', record.session = F){
+    max.time = NULL, nof.trials = NULL, condition = 'default', record.session = T){
     if('trial' %in% names(cnds))stop('trial is not a valid factor name')
     ## Zawsze sprawdzamy, czy nie trzeba dodać kolumn danych, a więc zawsze robimy db.create.data.table
     create.table = T ## !(paste(TASK.NAME, 'data', sep = '_') %in% db.query.csv('show tables;')[,1])
