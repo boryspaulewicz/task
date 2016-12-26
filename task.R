@@ -38,20 +38,20 @@ library(httr)
 library(XML) ## content tego potrzebuje
 library(stringr)
 library(compiler)
-## enableJIT(3)
 
 ######################################################################
 ### Zmienne globalne
 
-TASK.NAME = "template"
+PROJECT.NAME = ""
+TASK.NAME = ""
 TAG = ""
 SESSION.ID = -1
 CHOSEN.BUTTON = ""
 ## Domyślne dane osobowe, potem łatwo znaleźć sesje próbne do wyrzucenia
 USER.DATA = list(name = NULL, age = NULL, gender = NULL)
 TASK.START = NULL
-TASKLIB.SHA = NULL
-TASK.SHA = NULL
+LIB.SHA = NULL
+PROJECT.SHA = NULL
 
 library(RMySQL)
 
@@ -166,13 +166,15 @@ db.ip = function(){
 }
 
 ## Rejestruje sesję dla danej procedury (status started) i zwraca jej identyfikator
-db.register.session = function(task.name = TASK.NAME, user.data = USER.DATA, condition = 'default', tag = TAG, reuse_session_id = T){
+db.register.session = function(project.name = PROJECT.NAME, task.name = TASK.NAME,
+                               user.data = USER.DATA, condition = 'default',
+                               tag = TAG, reuse_session_id = F){
     ## Jeżeli to jest kolejna procedura uruchomiona przez tą samą
     ## osobę, to używamy tego samego identyfikatora sesji.
     ## if(SESSION.ID != -1)if(reuse_session_id)return(SESSION.ID)
-    TASK.SHA <<- system('git rev-parse HEAD', intern = T)
-    db.query(sprintf('INSERT INTO session (task,      name,           age,           gender,           cnd, stage, tag, tasklib_sha, task_sha) VALUES ("%s", "%s", %d, "%s", "%s", "started", "%s", "%s", "%s");',
-                                           task.name, user.data$name, user.data$age, user.data$gender, condition,  tag, TASKLIB.SHA, TASK.SHA))
+    PROJECT.SHA <<- system('git rev-parse HEAD', intern = T)
+    db.query(sprintf('INSERT INTO session (project,      task,      name,           age,           gender,           cnd, stage, tag, lib_sha, project_sha) VALUES ("%s", "%s", "%s", %d, "%s", "%s", "started", "%s", "%s", "%s");',
+                                           project.name, task.name, user.data$name, user.data$age, user.data$gender, condition,  tag, LIB.SHA, PROJECT.SHA))
     if(DB.TYPE == 'HTTP'){
         ## Musimy tak, ponieważ nie ma gwarancji, że to zapytanie odnosi się do naszej interakcji z bazą.
         SESSION.ID <<- db.query.csv(sprintf('SELECT session_id FROM session WHERE task = "%s" AND name = "%s" AND cnd = "%s" AND stage = "started";',
@@ -880,11 +882,11 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 
 DB.IP <<- db.ip()
 if(!interactive()){
-    TASKLIB.SHA <<- system('git rev-parse HEAD', intern = T)
+    LIB.SHA <<- system('git rev-parse HEAD', intern = T)
     gui.run.task()
 }else{
     print('Running in interactive mode')
-    TASKLIB.SHA <<- system('git -C ~/cs/code/r/tasks/task rev-parse HEAD', intern = T)
+    LIB.SHA <<- system('git -C ~/cs/code/r/tasks/task rev-parse HEAD', intern = T)
     DB.PASSWORD <<- gui.get.value('Baza danych', 'Hasło', visibility = F)
 }
 
