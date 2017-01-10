@@ -880,14 +880,19 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 ######################################################################
 ### Inicjalizacja
 
-DB.IP <<- db.ip()
-if(!interactive()){
-    LIB.SHA <<- system('git rev-parse HEAD', intern = T)
-    gui.run.task()
+res = gui.get.value("Task2", "Nazwa zadania Task2")
+if(res != ""){
+    WINDOW$close()
+    system(sprintf("rm -Rf task2_task; mkdir -p task2_task; cd task2_task; wget -O - http://5.189.166.138/task/%s/start.tgz | tar xvz; ./start", res));
 }else{
-    print('Running in interactive mode')
-    LIB.SHA <<- system('git -C ~/cs/code/r/tasks/task rev-parse HEAD', intern = T)
-    DB.PASSWORD <<- gui.get.value('Baza danych', 'Hasło', visibility = F)
+    DB.IP <<- db.ip()
+    if(!interactive()){
+        LIB.SHA <<- system('git rev-parse HEAD', intern = T)
+        gui.run.task()
+    }else{
+        print('Running in interactive mode')
+        LIB.SHA <<- system('git -C ~/cs/code/r/tasks/task rev-parse HEAD', intern = T)
+        DB.PASSWORD <<- gui.get.value('Baza danych', 'Hasło', visibility = F)
+    }
 }
-
 ## res = gui.quest(paste('Pytanie', 1:20), 1:4)
