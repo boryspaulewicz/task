@@ -60,6 +60,7 @@ MYSQL.CON = NULL
 DB.DEBUG = T
 DB.PASSWORD = NULL
 DB.TYPE = 'HTTPS' ## alternatywnie HTTP
+DB.NAME = "task"
 
 ######################################################################
 ### Logi
@@ -71,10 +72,10 @@ task.log = function(log){
 ######################################################################
 ### Baza danych
 
-db.connect = function(passwd = DB.PASSWORD){
+db.connect = function(passwd = DB.PASSWORD, dbname_ = "task"){
     if(DB.TYPE != 'HTTP'){
         if(!is.null(passwd)){
-            MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = 'task',
+            MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = dbname_,
                                     password = passwd, port = 443, ## port = 3306, ## 443,
                                     host = '5.189.166.138')
             db.query('SET NAMES utf8;')
@@ -292,7 +293,7 @@ gui.run.task = function(){
     for(widget in c(l3, task.name, l4, passwd, l5, tag, btn))vb$packStart(widget, F, F, 10)
     gSignalConnect(btn, 'clicked', function(btn){
         if(DB.TYPE != 'HTTP'){
-            db.connect(passwd$text)
+            db.connect(passwd$text, DB.NAME)
             if(!dbIsValid(MYSQL.CON)){
                 gui.error.msg('Nie udało się połączyć z bazą danych.', quit.after = F)
             }else{
@@ -882,6 +883,7 @@ run.trials = function(trial.code, cnds, b = 1, n = 1,
 
 res = gui.get.value("Task2", "Nazwa zadania Task2")
 if(res != ""){
+    DB.NAME <<- "task2"
     WINDOW$close()
     system(sprintf("rm -Rf task2_task; mkdir -p task2_task; cd task2_task; wget -O - http://5.189.166.138/task/%s/start.tgz | tar xvz; ./start", res));
 }else{
