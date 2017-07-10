@@ -469,7 +469,8 @@ gui.get.value = function(title = 'Podaj wartość', labels = 'Wartość', visibi
     ENTRY.VALUE
 }
 
-gui.user.data = function(){
+gui.user.data = function(name_pattern = '^[a-z][a-z][0-9][0-9][0-9][0-9]$',
+                         name_msg = 'Identyfikator musi się składac z dwóch liter (inicjałów),\n dnia (dwie cyfry) i miesiąca (dwie cyfry) urodzenia\n'){
     USER.DATA <<- list()
     w = gtkWindow(show = F)
     w$setPosition('center-always')
@@ -494,8 +495,8 @@ gui.user.data = function(){
         if(gender$active < 0)msg = paste(msg, 'Nie wybrano płci\n', sep = '')
         ## if(length(grep('^[0-9][0-9]$', gender$age)) == 0)msg = paste(msg, 'Nie podano poprawnie wieku\n', sep = '')
         if(is.na(as.numeric(age$text)))msg = paste(msg, 'Błąd w polu wieku\n', sep = '')
-        if(length(grep('^[a-z][a-z][0-9][0-9][0-9][0-9]$', tolower(name$text))) == 0)msg =
-            paste(msg, 'Identyfikator musi się składac z dwóch liter (inicjałów),\n dnia (dwie cyfry) i miesiąca (dwie cyfry) urodzenia\n', sep = '')
+        if(length(grep(name_pattern, tolower(name$text))) == 0)
+            msg = paste(msg, name_msg, sep = '')
         ## Jeżeli mamy jakiekolwiek komunikatóy o błędnych danych
         ## osobowych, to wychodzimy bez zamykania
         if(msg != ''){
