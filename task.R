@@ -77,7 +77,8 @@ db.connect = function(passwd = DB.PASSWORD, dbname_ = "task"){
         if(!is.null(passwd)){
             MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = dbname_,
                                     password = passwd, port = 443, ## port = 3306, ## 443,
-                                    host = '5.189.166.138')
+                                    host = '149.156.92.47') ## clab
+                                    ## host = '5.189.166.138')
             db.query('SET NAMES utf8;')
         }else{
             gui.error.msg('No password given for the database connection', quit.after = F)

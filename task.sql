@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS session (
 -- Tabela na logi
 
 create table if not exists logs(
- log varchar(300);
+ log varchar(300),
  time timestamp not null default current_timestamp on update current_timestamp);
  
 -- PROCEDURY
