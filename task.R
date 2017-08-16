@@ -80,6 +80,8 @@ db.connect = function(passwd = DB.PASSWORD, dbname_ = "task"){
                                     host = '149.156.92.47') ## clab
                                     ## host = '5.189.166.138')
             db.query('SET NAMES utf8;')
+            if(!dbIsValid(MYSQL.CON))
+                gui.error.msg("Database connection is not valid. Is password correct?", quit.after = F)
         }else{
             gui.error.msg('No password given for the database connection', quit.after = F)
         }
