@@ -55,7 +55,7 @@ PROJECT.SHA = NULL
 
 library(RMySQL)
 
-## DB.IP = NULL
+SERVER.IP = '149.156.92.47'
 MYSQL.CON = NULL
 DB.DEBUG = T
 DB.PASSWORD = NULL
@@ -77,7 +77,7 @@ db.connect = function(passwd = DB.PASSWORD, dbname_ = "task"){
         if(!is.null(passwd)){
             MYSQL.CON <<- dbConnect(MySQL(), user = 'task', dbname = dbname_,
                                     password = passwd, port = 443, ## port = 3306, ## 443,
-                                    host = '149.156.92.47') ## clab
+                                    host = SERVER.IP) ## clab
                                     ## host = '5.189.166.138')
             db.query('SET NAMES utf8;')
             if(!dbIsValid(MYSQL.CON))
@@ -93,7 +93,7 @@ db.disconnect = function(){
 }
 
 ## jako ... można quit.after = F
-db.query = function(q, fetch = F, ip = DB.IP, ...){
+db.query = function(q, fetch = F, ip = SERVER.IP, ...){
     if(DB.DEBUG)print(q)
     if(DB.TYPE == 'HTTP'){
         res = GET(paste("http://", ip, "/task/query.php", sep = ''),
@@ -159,15 +159,15 @@ db.insert.query = function(data, table){
     sprintf("insert into %s %s values %s;", table, nms, vls)
 }
 
-## IP bazy danych
-db.ip = function(){
-    l = try(readLines('/taskdata/ip'), T)
-    if(class(l) == 'try-error'){
-        gui.error.msg("Nie udało się ustalić adresu IP bazy danych")
-    }else{
-        str_trim(l[1])
-    }
-}
+## ## IP bazy danych
+## db.ip = function(){
+##     l = try(readLines('/taskdata/ip'), T)
+##     if(class(l) == 'try-error'){
+##         gui.error.msg("Nie udało się ustalić adresu IP bazy danych")
+##     }else{
+##         str_trim(l[1])
+##     }
+## }
 
 ## Rejestruje sesję dla danej procedury (status started) i zwraca jej identyfikator
 db.register.session = function(project.name = PROJECT.NAME, task.name = TASK.NAME,
@@ -889,9 +889,9 @@ res = gui.get.value("Task2", "Nazwa zadania Task2")
 if(res != ""){
     DB.NAME <<- "task2"
     WINDOW$close()
-    system(sprintf("rm -Rf task2_task; mkdir -p task2_task; cd task2_task; wget -O - http://5.189.166.138/task/%s/start.tgz | tar xvz; ./start", res));
+    system(sprintf("rm -Rf task2_task; mkdir -p task2_task; cd task2_task; wget -O - http://%s/task/%s/start.tgz | tar xvz; ./start",
+                   SERVER.IP, res));
 }else{
-    DB.IP <<- db.ip()
     if(!interactive()){
         LIB.SHA <<- system('git rev-parse HEAD', intern = T)
         gui.run.task()
